@@ -13,11 +13,6 @@ const pool = new Pool({
     port: 5432,
 });
 
-pool.on('error', (err, client) => {
-    console.error('Unexpected error on idle client', err);
-    process.exit(-1);
-});
-
 app.get('/', (req, res) => res.send('Welcome to Carmonic'));
 
 app.get('/getMechanics', (req, res) => {
@@ -29,13 +24,18 @@ app.get('/getMechanics', (req, res) => {
     console.log(longitude);
     console.log(latitude);
 
+    pool.on('error', (err, client) => {
+        console.error('Unexpected error on idle client', err);
+        process.exit(-1);
+    });
+
     pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
         if (err) {
-            throw err
+            throw err;
         }
         pool.query(config.SELECT_MECHANICS_QUERY, [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
             if (err) {
-                throw err
+                throw err;
             }
             console.log('mechanic:', result.rows);
             res.send(result.rows);

@@ -13,6 +13,17 @@ const pool = new Pool({
     port: 5432,
 });
 
+pool.on('error', (err, client) => {
+    console.error('Unexpected error on idle client', err);
+    process.exit(-1);
+});
+
+pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
+    if (err) {
+        console.log(err.stack);
+    }
+});
+
 app.get('/', (req, res) => res.send('Welcome to Carmonic'));
 
 app.get('/getMechanics', (req, res) => {
@@ -22,26 +33,16 @@ app.get('/getMechanics', (req, res) => {
     console.log(longitude);
     console.log(latitude);
 
-    pool.on('error', (err, client) => {
-        console.error('Unexpected error on idle client', err);
-        process.exit(-1);
-    });
-
-    pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
-        if (err) {
-            console.log(err.stack);
-        }
-    });
-
     pool.query(config.SELECT_MECHANICS_QUERY, [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
+        console.log("Here1");
         if (err) {
+            console.log("Here2");
             console.log(err.stack);
         }
         console.log('mechanic:', result.rows);
         pool.end();
         res.send(result.rows);
     });
-
 });
 
 app.listen(3000, function() {

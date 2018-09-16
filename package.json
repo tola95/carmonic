@@ -10,5 +10,14 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.3"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tola95/carmonic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tola95/carmonic/issues"
+  },
+  "homepage": "https://github.com/tola95/carmonic#readme"
 }

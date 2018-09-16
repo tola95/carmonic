@@ -31,15 +31,17 @@ app.get('/getMechanics', (req, res) => {
 
     pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
         if (err) {
-            throw err;
+            console.log(err.stack);
         }
-        pool.query(config.SELECT_MECHANICS_QUERY, [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
-            if (err) {
-                throw err;
-            }
-            console.log('mechanic:', result.rows);
-            res.send(result.rows);
-        });
+    });
+
+    pool.query(config.SELECT_MECHANICS_QUERY, [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
+        if (err) {
+            console.log(err.stack);
+        }
+        console.log('mechanic:', result.rows);
+        pool.end()
+        res.send(result.rows);
     });
 
 });

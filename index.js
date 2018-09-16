@@ -40,7 +40,6 @@ app.get('/getMechanics', (req, res) => {
             console.log(err.stack);
         }
         console.log('mechanic:', result.rows);
-        pool.end();
         res.send(result.rows);
     });
 });

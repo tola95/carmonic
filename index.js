@@ -33,7 +33,7 @@ app.get('/getMechanics', (req, res) => {
         if (err) {
             throw err
         }
-        pool.query('SELECT * FROM "Mechanic" ORDER BY distance($1, $2, lat, lng) LIMIT $3;', [1, 2, NUMBER_OF_MECHANICS], (err, result) => {
+        pool.query(config.SELECT_MECHANICS_QUERY, [1, 2, NUMBER_OF_MECHANICS], (err, result) => {
             if (err) {
                 throw err
             }
@@ -41,8 +41,6 @@ app.get('/getMechanics', (req, res) => {
             res.send(result.rows);
         });
     });
-
-
 
 });
 

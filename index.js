@@ -33,7 +33,7 @@ app.get('/getMechanics', (req, res) => {
     console.log(longitude);
     console.log(latitude);
 
-    pool.query(config.SELECT_MECHANICS_QUERY, [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
+    pool.query('SELECT * FROM "Mechanic" ORDER BY distance($1, $2, lat, lng) LIMIT $3;', [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
         console.log("Here1");
         if (err) {
             console.log("Here2");

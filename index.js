@@ -33,7 +33,7 @@ app.get('/getMechanics', (req, res) => {
         if (err) {
             throw err
         }
-        pool.query(config.SELECT_MECHANICS_QUERY, [1, 2, NUMBER_OF_MECHANICS], (err, result) => {
+        pool.query(config.SELECT_MECHANICS_QUERY, [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
             if (err) {
                 throw err
             }
@@ -45,5 +45,5 @@ app.get('/getMechanics', (req, res) => {
 });
 
 app.listen(3000, function() {
-    console.log('Example app listening on port 3000!');
+    console.log('Carmonic listening on port 3000!');
 });

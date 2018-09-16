@@ -19,8 +19,6 @@ app.get('/getMechanics', (req, res) => {
     var longitude = req.query.longitude;
     var latitude = req.query.latitude;
 
-    var result = {};
-
     console.log(longitude);
     console.log(latitude);
 
@@ -40,7 +38,7 @@ app.get('/getMechanics', (req, res) => {
             console.log(err.stack);
         }
         console.log('mechanic:', result.rows);
-        pool.end()
+        pool.end();
         res.send(result.rows);
     });
 

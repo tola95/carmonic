@@ -3,6 +3,8 @@ const app = express();
 const { Pool } = require('pg');
 var config = require('./config.json');
 
+var NUMBER_OF_MECHANICS = 5;
+
 const pool = new Pool({
     user: config.MECHANIC_DB_USER,
     host: config.MECHANIC_DB_ENDPOINT,
@@ -18,14 +20,32 @@ pool.on('error', (err, client) => {
 
 app.get('/', (req, res) => res.send('Welcome to Carmonic'));
 
-app.get('/getMechanics', (req, res) => res.send({'mechanicId':'0','latitude':'0','longitude':'0'}));
+app.get('/getMechanics', (req, res) => {
+    var longitude = req.query.longitude;
+    var latitude = req.query.latitude;
 
-app.listen(3000, function() {
-    pool.query('SELECT * FROM "Mechanic" WHERE username = $1', [1], (err, res) => {
+    var result = {};
+
+    console.log(longitude);
+    console.log(latitude);
+
+    pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
         if (err) {
             throw err
         }
-        console.log('mechanic:', res.rows[0])
-    })
+        pool.query('SELECT * FROM "Mechanic" ORDER BY distance($1, $2, lat, lng) LIMIT $3;', [1, 2, NUMBER_OF_MECHANICS], (err, result) => {
+            if (err) {
+                throw err
+            }
+            console.log('mechanic:', result.rows);
+            res.send(result.rows);
+        });
+    });
+
+
+
+});
+
+app.listen(3000, function() {
     console.log('Example app listening on port 3000!');
 });

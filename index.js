@@ -2,6 +2,9 @@ const express = require('express');
 const app = express();
 const { Pool } = require('pg');
 var config = require('./config.json');
+var server = require('http').Server(app);
+const io = require('socket.io')(server);
+io.set('origins', '*:*');
 
 var NUMBER_OF_MECHANICS = 5;
 
@@ -24,6 +27,27 @@ pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
     }
 });
 
+var currentConnections = {};
+
+io.on('connection', function (socket) {
+    console.log('a user connected');
+    socket.on('mechanic_register', function (data) {
+        console.log('mechanic ' + data + ' registered');
+        currentConnections[data] = {mechanicUsername : data, socket : socket};
+        socket._username = data;
+    });
+    socket.on('customer_register', function (data) {
+        console.log('customer ' + data + ' registered');
+        currentConnections[data] = {customerUsername : data, socket : socket};
+        socket._username = data;
+    });
+    socket.on('disconnect', function(){
+        delete currentConnections[socket._username];
+        console.log('user disconnected');
+        console.log('person ' + socket._username + ' de-registered');
+    });
+});
+
 app.get('/', (req, res) => res.send('Welcome to Carmonic'));
 
 app.get('/getMechanics', (req, res) => {
@@ -34,9 +58,7 @@ app.get('/getMechanics', (req, res) => {
     console.log(latitude);
 
     pool.query('SELECT * FROM "Mechanic" ORDER BY distance($1, $2, lat, lng) LIMIT $3;', [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
-        console.log("Here1");
         if (err) {
-            console.log("Here2");
             console.log(err.stack);
         }
         console.log('mechanic:', result.rows);
@@ -44,6 +66,12 @@ app.get('/getMechanics', (req, res) => {
     });
 });
 
-app.listen(3000, function() {
+app.get('/notifyMechanic', (req, res) => {
+    var mechanicUsername = req.query.username;
+    io.to(currentConnections[mechanicUsername].socket.id).emit('job');
+    res.send(mechanicUsername);
+});
+
+server.listen(3000, function() {
     console.log('Carmonic listening on port 3000!');
 });

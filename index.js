@@ -6,8 +6,14 @@ var server = require('http').Server(app);
 const io = require('socket.io')(server);
 io.set('origins', '*:*');
 
+/*
+ * POSTGRES LOGIC
+ */
+
+//Maximum number of mechanics to return in a getMechanics query
 var NUMBER_OF_MECHANICS = 5;
 
+//Config for the database connection
 const pool = new Pool({
     user: config.MECHANIC_DB_USER,
     host: config.MECHANIC_DB_ENDPOINT,
@@ -21,26 +27,40 @@ pool.on('error', (err, client) => {
     process.exit(-1);
 });
 
+//On starting the app we add the distance function to our Postgres instance
 pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
     if (err) {
         console.log(err.stack);
     }
 });
 
+/*
+ * SOCKET.IO LOGIC
+ */
+
+//Object storing the current socket connections to the server
 var currentConnections = {};
 
 io.on('connection', function (socket) {
     console.log('a user connected');
+
+    //On launching the front end mechanic app, the mechanic sends this event, registering his socket in the current connections
+    //Note that the key in the currentConnections is the username of the mechanic, so we can look up active mechanics via their username
     socket.on('mechanic_register', function (data) {
         console.log('mechanic ' + data + ' registered');
         currentConnections[data] = {mechanicUsername : data, socket : socket};
         socket._username = data;
     });
+
+    //On launching the front end customer app, the customer sends this event, registering his socket in the current connections
+    //Note that the key in the currentConnections is the username of the customer, so we can look up active customers via their username
     socket.on('customer_register', function (data) {
         console.log('customer ' + data + ' registered');
         currentConnections[data] = {customerUsername : data, socket : socket};
         socket._username = data;
     });
+
+    //On closing the app, the reference to the corresponding party's socket connection is terminated
     socket.on('disconnect', function(){
         delete currentConnections[socket._username];
         console.log('user disconnected');
@@ -48,6 +68,9 @@ io.on('connection', function (socket) {
     });
 });
 
+/*
+ * HTTP ENDPOINTS
+ */
 app.get('/', (req, res) => res.send('Welcome to Carmonic'));
 
 app.get('/getMechanics', (req, res) => {
@@ -67,7 +90,7 @@ app.get('/getMechanics', (req, res) => {
 });
 
 app.get('/notifyMechanic', (req, res) => {
-    var mechanicUsername = req.query.username;
+    var mechanicUsername = req.query.mechanicUsername;
     io.to(currentConnections[mechanicUsername].socket.id).emit('job');
     res.send(mechanicUsername);
 });

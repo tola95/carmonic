@@ -47,24 +47,30 @@ io.on('connection', function (socket) {
     //On launching the front end mechanic app, the mechanic sends this event, registering his socket in the current connections
     //Note that the key in the currentConnections is the username of the mechanic, so we can look up active mechanics via their username
     socket.on('mechanic_register', function (data) {
-        console.log('mechanic ' + data + ' registered');
-        currentConnections[data] = {mechanicUsername : data, socket : socket};
-        socket._username = data;
+        if (data) {
+            console.log('mechanic ' + data + ' registered');
+            currentConnections[data] = {mechanicUsername: data, socket: socket};
+            socket._username = data;
+        }
     });
 
     //On launching the front end customer app, the customer sends this event, registering his socket in the current connections
     //Note that the key in the currentConnections is the username of the customer, so we can look up active customers via their username
     socket.on('customer_register', function (data) {
-        console.log('customer ' + data + ' registered');
-        currentConnections[data] = {customerUsername : data, socket : socket};
-        socket._username = data;
+        if (data) {
+            console.log('customer ' + data + ' registered');
+            currentConnections[data] = {customerUsername : data, socket : socket};
+            socket._username = data;
+        }
     });
 
     //On closing the app, the reference to the corresponding party's socket connection is terminated
     socket.on('disconnect', function(){
-        delete currentConnections[socket._username];
-        console.log('user disconnected');
-        console.log('person ' + socket._username + ' de-registered');
+        if (socket._username) {
+            delete currentConnections[socket._username];
+            console.log('user disconnected');
+            console.log('person ' + socket._username + ' de-registered');
+        }
     });
 });
 
@@ -74,24 +80,35 @@ io.on('connection', function (socket) {
 app.get('/', (req, res) => res.send('Welcome to Carmonic'));
 
 app.get('/getMechanics', (req, res) => {
-    var longitude = req.query.longitude;
-    var latitude = req.query.latitude;
+    if (req.query) {
+        var longitude = req.query.longitude;
+        var latitude = req.query.latitude;
 
-    console.log(longitude);
-    console.log(latitude);
+        //ToDo: Validate longitude and latitude are legitimate values
 
-    pool.query('SELECT * FROM "Mechanic" ORDER BY distance($1, $2, lat, lng) LIMIT $3;', [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
-        if (err) {
-            console.log(err.stack);
+        if (longitude && latitude) {
+            console.log(longitude);
+            console.log(latitude);
+
+            pool.query('SELECT * FROM "Mechanic" ORDER BY distance($1, $2, lat, lng) LIMIT $3;', [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
+                if (err) {
+                    console.log(err.stack);
+                    res.send("There was an error retrieving mechanics from the database");
+                }
+                console.log('mechanic:', result.rows);
+                res.send(result.rows);
+            });
+        } else {
+            res.send("Wrong latitude and longitude parameters")
         }
-        console.log('mechanic:', result.rows);
-        res.send(result.rows);
-    });
+    }
 });
 
 app.get('/notifyMechanic', (req, res) => {
     var mechanicUsername = req.query.mechanicUsername;
-    io.to(currentConnections[mechanicUsername].socket.id).emit('job');
+    var customerUsername = req.query.customerUsername;
+    console.log(mechanicUsername);
+    io.to(currentConnections[mechanicUsername].socket.id).emit('job', customerUsername);
     res.send(mechanicUsername);
 });
 

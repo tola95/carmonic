@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Customer</title>
+</head>
+<body>
+<!-- Load socket.io client library -->
+<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script
+        src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+    var socket = io.connect('http://localhost:3000');
+    socket.on('connect', function() {
+        console.log('Customer has connected to the server!');
+    });
+    //socket.emit('customer_register', 'rand_customer_id');
+    $(document).ready(function(){
+        $('#loginForm').submit(function(e){
+            e.preventDefault();
+            var customerUsername = $('#loginForm').find('input[name="customerUsername"]').val();
+            socket.emit('customer_register', customerUsername);
+            console.log("Customer has registered");
+            return true;
+        });
+    });
+
+</script>
+
+<h1>Hello Customer</h1>
+<form id="loginForm" action="" method="get">
+    Customer name:<br>
+    <input type="text" name="customerUsername"><br>
+    <input type="submit" value="Login" />
+</form>
+<form id="requestMechanicForm" action="http://localhost:3000/notifyMechanic" method="get">
+    Mechanic name:<br>
+    <input type="text" name="mechanicUsername"><br>
+    Customer name:<br>
+    <input type="text" name="customerUsername"><br>
+    <input type="submit" value="Get Mechanic" />
+</form>
+<h4 id="notification">
+    <!-- Some info will be displayed here-->
+</h4>
+<div id="map">
+    <!-- We will load a map here later-->
+</div>
+<!--Load JavaScripts -->
+</body>
+</html>

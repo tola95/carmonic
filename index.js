@@ -5,6 +5,9 @@ var config = require('./config.json');
 var server = require('http').Server(app);
 const io = require('socket.io')(server);
 io.set('origins', '*:*');
+var passport = require('passport')
+    , LocalStrategy = require('passport-local').Strategy;
+var bodyParser = require("body-parser");
 
 /*
  * POSTGRES LOGIC
@@ -75,9 +78,79 @@ io.on('connection', function (socket) {
 });
 
 /*
+ * AUTHENTICATION LOGIC
+ */
+
+passport.use('signup', new LocalStrategy({
+        passReqToCallback: true
+    },
+    function (req, username, password, done) {
+        // find a user in postgres with provided username
+        //ToDo: Sanitise inputs
+
+        pool.query('SELECT * FROM "Customers" WHERE "email"=$1', [req.body.email], (err, result) => {
+            if (result.rows[0]) {
+                var user = result.rows[0];
+                console.log("customer " + req.body.email + " already exists");
+                //res.send("Customer already exists");
+                return done(null, user);
+            } else {
+                pool.query('INSERT INTO "Customers" ("firstname", "lastname", "email", "password") VALUES ($1, $2, $3, $4)', [req.body.firstname, req.body.lastname, req.body.email, req.body.password], function (err, result) {
+                    if (err) {
+                        console.log(err);
+                        console.log("Problem adding customer to database");
+                        return done(err);
+                    } else {
+                        pool.query('COMMIT');
+                        console.log(result);
+                        console.log("customer " + req.body.email + " created");
+                        return done(null, {
+                            firstname: req.body.firstname,
+                            lastname: req.body.lastname,
+                            email: req.body.email,
+                            password: req.body.password
+                        });
+                    }
+                });
+            }
+        });
+    })
+);
+
+/*
  * HTTP ENDPOINTS
  */
+app.use(express.static('./'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(passport.initialize());
+
 app.get('/', (req, res) => res.send('Welcome to Carmonic'));
+
+app.post('/signup',
+    passport.authenticate('signup', {
+        session: false
+    }),
+    function(req, res) {
+        // `req.user` contains the authenticated user.
+        //res.redirect('/users/' + req.user.username);
+        //res.send('Yes');
+        res.send(req.user);
+    }
+);
+
+app.post('/login',
+    passport.authenticate('local'),
+    function(req, res) {
+        // `req.user` contains the authenticated user.
+        //res.redirect('/users/' + req.user.username);
+    }
+);
+
+// app.get('/signup.html', function(req, res){
+//     res.render('test-front-end/signup.html', {});
+// });
+
 
 app.get('/getMechanics', (req, res) => {
     if (req.query) {

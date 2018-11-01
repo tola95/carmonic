@@ -1,12 +1,9 @@
 const express = require('express');
 const app = express();
 var server = require('http').Server(app);
-var passport = require('passport')
-    , LocalStrategy = require('passport-local').Strategy;
 var bodyParser = require("body-parser");
-require("./db-module/postgres-logic");
-require("./auth-module/socket-io-logic");
-require("./auth-module/passport-logic");
+var io = require("./auth-module/socket-io-logic")(server).io;
+var passport = require("./auth-module/passport-logic").passport;
 
 
 /*

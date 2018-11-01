@@ -41,3 +41,5 @@ passport.use('signup', new LocalStrategy({
         });
     })
 );
+
+exports.passport = passport;

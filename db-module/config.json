@@ -1,0 +1,9 @@
+{
+  "MECHANIC_DB_URL" : "jdbc:postgresql://carmonic.cv1e5hz76sll.eu-west-2.rds.amazonaws.com:5432/MechanicDB",
+  "MECHANIC_DB_USER" : "carmonic",
+  "MECHANIC_DB_PASSWORD" : "carmonic1",
+  "MECHANIC_DB_ENDPOINT" : "carmonic.cv1e5hz76sll.eu-west-2.rds.amazonaws.com",
+  "MECHANIC_DB_PORT" : "5432",
+  "MECHANIC_DB_DATABASE" : "MechanicDB",
+  "DISTANCE_FUNCTION" : "CREATE OR REPLACE FUNCTION distance(lat1 FLOAT, lon1 FLOAT, lat2 FLOAT, lon2 FLOAT) RETURNS FLOAT AS $$ DECLARE x float = 69.1 * (lat2 - lat1); DECLARE y float = 69.1 * (lon2 - lon1) * cos(lat1 / 57.3); BEGIN RETURN sqrt(x * x + y * y); END \n $$ LANGUAGE plpgsql;"
+}

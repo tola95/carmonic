@@ -4,6 +4,11 @@ var server = require('http').Server(app);
 var bodyParser = require("body-parser");
 var io = require("./auth-module/socket-io-logic")(server).io;
 var passport = require("./auth-module/passport-logic").passport;
+const jwt = require('jsonwebtoken');
+var crypto = require('crypto');
+const expressJwt = require('express-jwt');
+var secret = crypto.randomBytes(256);
+const authenticate = expressJwt({secret : secret});
 
 
 /*
@@ -23,16 +28,21 @@ app.post('/signup',
     function(req, res) {
         // `req.user` contains the authenticated user.
         //res.redirect('/users/' + req.user.username);
-        //res.send('Yes');
         res.send(req.user);
     }
 );
 
 app.post('/login',
-    passport.authenticate('local'),
+    passport.authenticate('login', {
+        session: false
+    }),
     function(req, res) {
-        // `req.user` contains the authenticated user.
-        //res.redirect('/users/' + req.user.username);
+        //generate token
+        req.user.token = jwt.sign({
+            id: req.body.username,
+        }, secret);
+
+        res.send(req.user);
     }
 );
 

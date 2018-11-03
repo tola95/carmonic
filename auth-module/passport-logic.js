@@ -6,9 +6,15 @@ var pool = postgresLogic.pool;
  * AUTHENTICATION LOGIC
  */
 
-passport.use('signup', new LocalStrategy({
-        passReqToCallback: true
-    },
+var LOCAL_STRATEGY_CONFIG = {
+    usernameField: 'email',
+    passwordField: 'password',
+    session: false,
+    passReqToCallback: true
+};
+
+passport.use('signup', new LocalStrategy(
+    LOCAL_STRATEGY_CONFIG,
     function (req, username, password, done) {
         // find a user in postgres with provided username
         //ToDo: Sanitise inputs
@@ -44,9 +50,8 @@ passport.use('signup', new LocalStrategy({
     })
 );
 
-passport.use('login', new LocalStrategy({
-        passReqToCallback: true
-    },
+passport.use('login', new LocalStrategy(
+    LOCAL_STRATEGY_CONFIG,
     function (req, username, password, done) {
         pool.query('SELECT * FROM "Customers" WHERE "email"=$1 AND "password"=$2', [req.body.email, req.body.password], (err, result) => {
             if (err) {

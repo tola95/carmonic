@@ -10,7 +10,6 @@ const expressJwt = require('express-jwt');
 var secret = crypto.randomBytes(256);
 const authenticate = expressJwt({secret : secret});
 
-
 /*
  * HTTP ENDPOINTS
  */
@@ -28,7 +27,11 @@ app.post('/signup',
     function(req, res) {
         // `req.user` contains the authenticated user.
         //res.redirect('/users/' + req.user.username);
-        res.send(req.user);
+        response = {
+            user: req.user,
+            authInfo: req.authInfo
+        };
+        res.send(response);
     }
 );
 
@@ -38,11 +41,18 @@ app.post('/login',
     }),
     function(req, res) {
         //generate token
-        req.user.token = jwt.sign({
-            id: req.body.username,
-        }, secret);
+        if (req.user.email) {
+            req.user.token = jwt.sign({
+                id: req.body.username,
+            }, secret);
+        }
 
-        res.send(req.user);
+        response = {
+            user: req.user,
+            authInfo: req.authInfo
+        };
+
+        res.send(response);
     }
 );
 

@@ -23,7 +23,8 @@ passport.use('signup', new LocalStrategy({
                 var user = result.rows[0];
                 console.log("customer " + req.body.email + " already exists");
                 //res.send("Customer already exists");
-                return done(null, user);
+                //new entry signifies if the customer did not exist previously
+                return done(null, {email: user.email}, {message: "User already exists"});
             } else {
                 pool.query('INSERT INTO "Customers" ("firstname", "lastname", "email", "password") VALUES ($1, $2, $3, $4)', [req.body.firstname, req.body.lastname, req.body.email, req.body.password], function (err, result) {
                     if (err) {
@@ -32,14 +33,10 @@ passport.use('signup', new LocalStrategy({
                         return done(err);
                     } else {
                         pool.query('COMMIT');
-                        console.log(result);
                         console.log("customer " + req.body.email + " created");
                         return done(null, {
-                            firstname: req.body.firstname,
-                            lastname: req.body.lastname,
-                            email: req.body.email,
-                            password: req.body.password
-                        });
+                            email: req.body.email
+                        }, {message: "Successfully signed up"});
                     }
                 });
             }
@@ -61,10 +58,10 @@ passport.use('login', new LocalStrategy({
                 var user = result.rows[0];
                 console.log("customer " + req.body.email + " is logging in");
                 //res.send("Customer already exists");
-                return done(null, user);
+                return done(null, user, {message: "Successfully logged in"});
             } else {
-                console.log("customer " + req.body.email + " does not exist");
-                return done(null, false)
+                console.log("customer " + req.body.email + " with password " + req.body.password + " does not exist");
+                return done(null, {}, {message: "Incorrect username or password"});
             }
         });
     })

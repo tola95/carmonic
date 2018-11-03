@@ -11,6 +11,7 @@ var crypto = require('crypto');
 const expressJwt = require('express-jwt');
 var secret = crypto.randomBytes(256);
 const authenticate = expressJwt({secret : secret});
+var logger = require('./logging-module/winston-logic.js');
 
 /*
  * HTTP ENDPOINTS

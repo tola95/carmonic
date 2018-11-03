@@ -1,0 +1,12 @@
+{
+  "EMAIL" : "email",
+  "PASSWORD" : "password",
+  "SIGNUP" : "signup",
+  "LOGIN" : "login",
+  "SOCKET_MECHANIC_REGISTRATION_EVENT" : "mechanic_register",
+  "SOCKET_CUSTOMER_REGISTRATION_EVENT" : "customer_register",
+  "SOCKET_DISCONNECT_EVENT" : "disconnect",
+  "PG_ERROR_EVENT" : "error",
+  "MECHANIC_TABLE" : "Mapped Mechanics",
+  "CUSTOMER_TABLE" : "Customers"
+}

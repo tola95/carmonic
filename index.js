@@ -3,6 +3,8 @@ const app = express();
 var server = require('http').Server(app);
 var bodyParser = require("body-parser");
 var io = require("./auth-module/socket-io-logic")(server).io;
+var postgresLogic = require("./db-module/postgres-logic");
+var pool = postgresLogic.pool;
 var passport = require("./auth-module/passport-logic").passport;
 const jwt = require('jsonwebtoken');
 var crypto = require('crypto');
@@ -61,23 +63,11 @@ app.get('/getMechanics', (req, res) => {
         var longitude = req.query.longitude;
         var latitude = req.query.latitude;
 
-        //ToDo: Validate longitude and latitude are legitimate values
+        postgresLogic.getClosestMechanics(latitude, longitude, function(result) {
+            console.log(result);
+            res.send(result);
+        });
 
-        if (longitude && latitude) {
-            console.log(longitude);
-            console.log(latitude);
-
-            pool.query('SELECT * FROM "Mechanic" ORDER BY distance($1, $2, lat, lng) LIMIT $3;', [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
-                if (err) {
-                    console.log(err.stack);
-                    res.send("There was an error retrieving mechanics from the database");
-                }
-                console.log('mechanic:', result.rows);
-                res.send(result.rows);
-            });
-        } else {
-            res.send("Wrong latitude and longitude parameters")
-        }
     }
 });
 

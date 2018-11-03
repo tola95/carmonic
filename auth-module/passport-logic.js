@@ -1,19 +1,19 @@
 var passport = require('passport')
     , LocalStrategy = require('passport-local').Strategy;
-var postgresLogic = require("../db-module/postgres-logic");
-var pool = postgresLogic.pool;
+var pool = require("../db-module/postgres-logic").pool;
+var stringConstants = require("../string-constants.json");
 /*
  * AUTHENTICATION LOGIC
  */
 
 var LOCAL_STRATEGY_CONFIG = {
-    usernameField: 'email',
-    passwordField: 'password',
+    usernameField: stringConstants.EMAIL,
+    passwordField: stringConstants.PASSWORD,
     session: false,
     passReqToCallback: true
 };
 
-passport.use('signup', new LocalStrategy(
+passport.use(stringConstants.SIGNUP, new LocalStrategy(
     LOCAL_STRATEGY_CONFIG,
     function (req, username, password, done) {
         // find a user in postgres with provided username
@@ -50,7 +50,7 @@ passport.use('signup', new LocalStrategy(
     })
 );
 
-passport.use('login', new LocalStrategy(
+passport.use(stringConstants.LOGIN, new LocalStrategy(
     LOCAL_STRATEGY_CONFIG,
     function (req, username, password, done) {
         pool.query('SELECT * FROM "Customers" WHERE "email"=$1 AND "password"=$2', [req.body.email, req.body.password], (err, result) => {

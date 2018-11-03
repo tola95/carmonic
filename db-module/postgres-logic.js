@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 var config = require('./config.json');
+const stringConstants = require("../string-constants.json");
 
 /*
  * POSTGRES LOGIC
@@ -17,7 +18,7 @@ const pool = new Pool({
     port: 5432,
 });
 
-pool.on('error', (err, client) => {
+pool.on(stringConstants.PG_ERROR_EVENT, (err, client) => {
     console.error('Unexpected error on idle client', err);
 });
 
@@ -27,6 +28,25 @@ pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
         console.log(err.stack);
     }
 });
+
+exports.getClosestMechanics = function (latitude, longitude, callback) {
+    //ToDo: Validate longitude and latitude are legitimate values
+    if (longitude && latitude) {
+        console.log(longitude);
+        console.log(latitude);
+
+        pool.query('SELECT * FROM "Mapped Mechanics" ORDER BY distance($1, $2, latitude, longitude) LIMIT $3;', [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
+            if (err) {
+                console.log(err.stack);
+                callback({message: "There was an error retrieving mechanics from the database"});
+            }
+            console.log('mechanic:', result.rows);
+            return callback(result);
+        });
+    } else {
+        callback({message: "Wrong latitude and longitude parameters"});
+    }
+};
 
 exports.pool = pool;
 

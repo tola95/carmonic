@@ -12,7 +12,7 @@ Our host runs publicly at ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:300
 
 ## API Documentation
 
-#### 1) getMechanics
+#### 1) getMechanics 
 
 ![Alt text](statics/getMechanics.jpg?raw=true "getMechanics diagram")
 
@@ -24,4 +24,43 @@ Example input: GET /getMechanics?longitude=-0.081018&latitude=51.652084
 
 Example response: [{"username":"2","firstname":"Lekki Mechanics","lat":51.652084,"lng":-0.081018},{"username":"1","firstname":"Ikorodu Service Centre","lat":51.517681,"lng":-0.08237}]
 
+#### 2) signUp
 
+##### Description
+
+Adds the customer to our database if they are not signed up already.
+
+NOTE: Hash and salt real passwords before calling this API. DO NOT SEND RAW PASSWORDS OVER THE INTERNET
+
+Example request (POST request) : curl --data "firstname=Omotola&lastname=Babasola&email=omotola.babasola%40yahoo.com&password=abcdefg" http://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:3000/signup
+
+Example response : {"user":{"email":"omotola.babasola@yahoo.com"},"authInfo":{"message":"Successfully signed up"}}
+
+If they are signed up, we return a message indicating that is the case.
+
+Example response : {"user":{"email":"omotola.babasola@yahoo.com"},"authInfo":{"message":"User already exists"}}
+
+There is a test sign up web form at http://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:3000/test-front-end/signup.html you can use to try this API out
+
+
+#### 3) logIn
+
+##### Description
+
+Establishes the identity of the client with the server.
+
+NOTE: Hash and salt real passwords before calling this API. DO NOT SEND RAW PASSWORDS OVER THE INTERNET
+
+Example request: curl --data "email=omotola.babasola%40yahoo.com&password=abcdefgh" http://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:3000/login
+
+Example response: {"user":{"id":"8","firstname":"Omotola","lastname":"Babasola","email":"omotola.babasola@yahoo.com","password":"abcdefgh","token":"abc.xyz"},"authInfo":{"message":"Successfully logged in"}}
+
+The response contains a jwt auth token, which will need to be added to the header of any request sent to the server afterwards, to establish the identity of the user. You will need to add the header in the list of headers such:
+
+Authorization: "Bearer <insert_your_JWT_here>"
+
+If the username and passowrd combination is not present in the database, the response message reflects this.
+
+Example response: {"user":{},"authInfo":{"message":"Incorrect username or password"}}
+
+There is a test sign up web form at http://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:3000/test-front-end/login.html you can use to try this API out

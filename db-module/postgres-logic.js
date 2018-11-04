@@ -40,7 +40,6 @@ exports.getClosestMechanics = function (latitude, longitude, callback) {
                 console.log(err.stack);
                 callback({message: "There was an error retrieving mechanics from the database"});
             }
-            console.log('mechanic:', result.rows);
             return callback(result);
         });
     } else {

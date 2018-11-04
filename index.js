@@ -65,8 +65,7 @@ app.get('/getMechanics', (req, res) => {
         var latitude = req.query.latitude;
 
         postgresLogic.getClosestMechanics(latitude, longitude, function(result) {
-            console.log(result);
-            res.send(result);
+            res.send(result.rows);
         });
 
     }

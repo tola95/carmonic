@@ -6,43 +6,129 @@
 </head>
 <body>
 <!-- Load socket.io client library -->
-<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script
         src="https://code.jquery.com/jquery-3.3.1.min.js"
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
+<script src="http://malsup.github.com/jquery.form.js"></script>
 
 <script type="text/javascript">
-    var socket = io.connect('http://localhost:3000');
+    let authToken;
+    var socket = io.connect();
     socket.on('connect', function() {
         console.log('Customer has connected to the server!');
     });
     //socket.emit('customer_register', 'rand_customer_id');
     $(document).ready(function(){
-        $('#loginForm').submit(function(e){
-            e.preventDefault();
-            var customerUsername = $('#loginForm').find('input[name="customerUsername"]').val();
-            socket.emit('customer_register', customerUsername);
-            console.log("Customer has registered");
-            return true;
+//        $('#loginForm').submit(function(e){
+//            console.log(e);
+//            e.preventDefault();
+//            var customerUsername = $('#loginForm').find('input[name="customerUsername"]').val();
+//            socket.emit('customer_register', customerUsername);
+//            console.log("Customer has registered");
+//            return true;
+//        });
+
+        function notifyMechanic() {
+            //todo
+            return undefined;
+        }
+
+        $('#loginForm').ajaxForm({
+            success : function (response) {
+                console.log(response);
+                $('p').text(response.authInfo.message);
+                authToken = response.user.token;
+
+                $('#getMechanicForm').ajaxForm({
+                    type : 'GET',
+                    url : "http://localhost:3000/getMechanics",
+                    headers : {
+                        Authorization : 'Bearer ' + authToken
+                    },
+                    success : function (response) {
+                        console.log(response);
+                        if (response.user) {
+//                            var customerUsername = response.user.id;
+//                            socket.emit('customer_register', customerUsername);
+//                            console.log("Customer has registered");
+                            var i=0;
+                            while (i<response.length) {
+                                var mechanic = notifyMechanic(response[i]);
+                                if (mechanic) {
+                                    console.log(mechanic);
+                                }
+                                i++;
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+
+
+        $('#getMechanicButton').click(function() {
+            var lat;
+            var long;
+
+//            console.log("1");
+//            if (navigator && navigator.geolocation) {
+//                console.log("2");
+//                navigator.geolocation.getCurrentPosition(function (position) {
+//                    lat = position.coords.latitude;
+//                    long = position.coords.longitude;
+//                    console.log("3");
+//                    $.get('/getMechanics', { latitude: lat, longitude: long }, function(response){
+//                        console.log(response);
+//                    });
+//                });
+//            } else {
+//                console.log("4");
+//                lat = 0.0;
+//                long = 0.0;
+//                $.get('/getMechanics', { latitude: lat, longitude: long }, function(response){
+//                    console.log(response);
+//                });
+//            }
+
+            $.get('/getMechanics', { latitude: lat, longitude: long }, function(response){
+                console.log(response);
+            });
+
         });
     });
 
 </script>
 
-<h1>Hello Customer</h1>
-<form id="loginForm" action="" method="get">
-    Customer name:<br>
-    <input type="text" name="customerUsername"><br>
-    <input type="submit" value="Login" />
+<h1>Welcome to Carmonic</h1>
+<div>
+<h4>Please sign in</h4>
+<form id="loginForm" action="/login" method="post">
+    <div>
+        <label>Email:</label>
+        <input type="text" name="email"/><br/>
+    </div>
+    <div>
+        <label>Password:</label>
+        <input type="text" name="password"/><br/>
+    </div>
+    <div>
+        <input type="submit" value="Login"/>
+    </div>
 </form>
-<form id="requestMechanicForm" action="http://localhost:3000/notifyMechanic" method="get">
-    Mechanic name:<br>
-    <input type="text" name="mechanicUsername"><br>
-    Customer name:<br>
-    <input type="text" name="customerUsername"><br>
-    <input type="submit" value="Get Mechanic" />
-</form>
+</div>
+<p id="notification"><b></b></p>
+<div>
+    <form id="getMechanicForm">
+        Latitude:<br>
+        <input type="text" name="latitude"><br>
+        Longitude:<br>
+        <input type="text" name="longitude"><br>
+        <input type="submit" value="Get A Mechanic"/>
+    </form>
+</div>
 <h4 id="notification">
     <!-- Some info will be displayed here-->
 </h4>

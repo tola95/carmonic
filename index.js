@@ -2,14 +2,14 @@ const express = require('express');
 const app = express();
 var server = require('http').Server(app);
 var bodyParser = require("body-parser");
-var io = require("./auth-module/socket-io-logic")(server).io;
+var {io, currentConnections} = require("./auth-module/socket-io-logic")(server);
 var postgresLogic = require("./db-module/postgres-logic");
-var pool = postgresLogic.pool;
 var passport = require("./auth-module/passport-logic").passport;
-const jwt = require('jsonwebtoken');
 var crypto = require('crypto');
 const expressJwt = require('express-jwt');
+//ToDo: Store secret as environment variable for when we scale up
 var secret = crypto.randomBytes(256);
+const jwt = require('./auth-module/jwt-logic')(secret);
 const authenticate = expressJwt({secret : secret});
 var logger = require('./logging-module/winston-logic.js');
 
@@ -44,37 +44,63 @@ app.post('/login',
     }),
     function(req, res) {
         //generate token
-        if (req.user.email) {
-            req.user.token = jwt.sign({
-                id: req.body.username,
-            }, secret);
-        }
+        jwt.sign(req, function(err, req) {
+            if (err) {
+                res.send(err);
+                return;
+            }
+            response = {
+                user: req.user,
+                authInfo: req.authInfo
+             };
 
-        response = {
-            user: req.user,
-            authInfo: req.authInfo
-        };
-
-        res.send(response);
+            res.send(response);
+        });
     }
 );
 
-app.get('/getMechanics', (req, res) => {
-    if (req.query) {
-        var longitude = req.query.longitude;
-        var latitude = req.query.latitude;
+app.post('/deleteaccount')
 
-        postgresLogic.getClosestMechanics(latitude, longitude, function(result) {
-            res.send(result.rows);
-        });
+app.post('/signupMechanic',
+    passport.authenticate('signupMechanic', {
+        session: false
+    }),
+    function(req, res) {
+        //generate token
+        // jwt.sign(req, function(err, req) {
+        //     if (err) {
+        //         res.send(err);
+        //         return;
+        //     }
+        //     response = {
+        //         user: req.user,
+        //         authInfo: req.authInfo
+        //     };
 
+            res.send(response);
+        //});
     }
+);
+
+app.get('/getMechanics',
+    expressJwt({secret: secret}),
+    (req, res) => {
+        if (req.query) {
+            var longitude = req.query.longitude;
+            var latitude = req.query.latitude;
+
+            postgresLogic.getClosestMechanics(latitude, longitude, function (result) {
+                res.send(result.rows);
+            });
+
+        }
 });
 
 app.get('/notifyMechanic', (req, res) => {
     var mechanicUsername = req.query.mechanicUsername;
     var customerUsername = req.query.customerUsername;
     console.log(mechanicUsername);
+
     io.to(currentConnections[mechanicUsername].socket.id).emit('job', customerUsername);
     res.send(mechanicUsername);
 });

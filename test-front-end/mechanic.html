@@ -6,14 +6,15 @@
 </head>
 <body>
 <!-- Load socket.io client library -->
-<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script
         src="https://code.jquery.com/jquery-3.3.1.min.js"
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
+<script src="http://malsup.github.com/jquery.form.js"></script>
 
 <script type="text/javascript">
-    var socket = io.connect('http://localhost:3000');
+    var socket = io.connect();
     socket.on('connect', function () {
         console.log('Mechanic has connected to the server!');
     });
@@ -24,23 +25,37 @@
     });
     //socket.emit('mechanic_register', 'rand_mechanic_id');
     $(document).ready(function() {
-        $('#loginForm').submit(function (e) {
-            e.preventDefault();
-            var mechanicUsername = $('#loginForm').find('input[name="mechanicUsername"]').val();
-            socket.emit('mechanic_register', mechanicUsername);
-            console.log("Mechanic has registered");
-            return true;
+//        $('#loginForm').submit(function (e) {
+//            e.preventDefault();
+//            var mechanicUsername = $('#loginForm').find('input[name="mechanicUsername"]').val();
+//            socket.emit('mechanic_register', mechanicUsername);
+//            console.log("Mechanic has registered");
+//            return true;
+//        });
+
+        $('#loginForm').ajaxForm({
+            success : function (response) {
+                console.log(response);
+                $('p').text(response.authInfo.message);
+            }
         });
     });
 </script>
 
 <h1>Hello Mechanic</h1>
-<form id="loginForm" action="" method="get">
-    First name:<br>
-    <input type="text" name="mechanicUsername"><br>
-    <input type="submit" value="Login" />
+<h5>Sign Up To Our Registry</h5>
+<form id="loginForm" action="/signupMechanic" method="post">
+    Name:<br>
+    <input type="text" name="name"><br>
+    Latitude:<br>
+    <input type="text" name="latitude"><br>
+    Longitude:<br>
+    <input type="text" name="longitude"><br>
+    Phone Number:<br>
+    <input type="text" name="phoneNumber"><br>
+    <input type="submit" value="Sign Up" />
 </form>
-<h4 id="notification" style="display:none"></h4>
+c
 <div id="map">
     <!-- We will load a map here later-->
 </div>

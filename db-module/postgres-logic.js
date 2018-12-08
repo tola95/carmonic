@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 var config = require('./config.json');
 const stringConstants = require("../string-constants.json");
+var logger = require('../logging-module/winston-logic.js').logger;
 
 /*
  * POSTGRES LOGIC
@@ -19,13 +20,14 @@ const pool = new Pool({
 });
 
 pool.on(stringConstants.PG_ERROR_EVENT, (err, client) => {
-    console.error('Unexpected error on idle client', err);
+    logger.error('Unexpected error on idle client');
 });
 
 //On starting the app we add the distance function to our Postgres instance
 pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
     if (err) {
-        console.log(err.stack);
+        logger.error("Error adding distance function to database");
+        logger.error(err);
     }
 });
 
@@ -35,9 +37,10 @@ exports.getClosestMechanics = function (latitude, longitude, callback) {
         console.log(longitude);
         console.log(latitude);
 
-        pool.query('SELECT * FROM "Mapped Mechanics" ORDER BY distance($1, $2, latitude, longitude) LIMIT $3;', [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
+        pool.query('SELECT * FROM "TestMechanics" ORDER BY distance($1, $2, latitude, longitude) LIMIT $3;', [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
             if (err) {
-                console.log(err.stack);
+                logger.error("Problem searching for mechanics closest to latitude " + latitude + " longitude " + longitude +" in database");
+                logger.error(err);
                 callback({message: "There was an error retrieving mechanics from the database"});
             }
             return callback(result);

@@ -43,5 +43,5 @@ module.exports = function(server) {
         });
     });
 
-    return {io: io};
+    return {io: io, currentConnections: currentConnections};
 };

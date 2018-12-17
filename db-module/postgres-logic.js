@@ -34,9 +34,6 @@ pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
 exports.getClosestMechanics = function (latitude, longitude, callback) {
     //ToDo: Validate longitude and latitude are legitimate values
     if (longitude && latitude) {
-        console.log(longitude);
-        console.log(latitude);
-
         pool.query('SELECT * FROM "TestMechanics" ORDER BY distance($1, $2, latitude, longitude) LIMIT $3;', [latitude, longitude, NUMBER_OF_MECHANICS], (err, result) => {
             if (err) {
                 logger.error("Problem searching for mechanics closest to latitude " + latitude + " longitude " + longitude +" in database");

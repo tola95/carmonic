@@ -17,34 +17,60 @@
     var socket = io.connect();
     socket.on('connect', function () {
         console.log('Mechanic has connected to the server!');
+        $('#online').text("Online");
     });
-    socket.on('job', function (customerId) {
-        console.log('Mechanic has received a job from ' + customerId);
-        $('h4.notification').text("You have received a job from " + customerId);
-        $('h4.notification').show();
+    socket.on('disconnect', function() {
+        console.log('Mechanic has disconnected from the server!');
+        $('#online').text("Offline");
     });
-    //socket.emit('mechanic_register', 'rand_mechanic_id');
-    $(document).ready(function() {
-//        $('#loginForm').submit(function (e) {
-//            e.preventDefault();
-//            var mechanicUsername = $('#loginForm').find('input[name="mechanicUsername"]').val();
-//            socket.emit('mechanic_register', mechanicUsername);
-//            console.log("Mechanic has registered");
-//            return true;
-//        });
+    socket.on('job_request', function (mechanic, customer) {
+        console.log('Mechanic has received a job from ' + customer.id);
+        $('#job').text("You have received a job from " + customer.firstname + ' ' + customer.lastname);
+        $('#jobContainer').show();
+        $('#acceptJob').click(function() {
+            socket.emit('mechanic_accept_job', mechanic, customer);
+            $('#jobContainer').hide();
 
-        $('#loginForm').ajaxForm({
+        });
+        $('#rejectJob').click(function() {
+            socket.emit('mechanic_reject_job', mechanic, customer);
+            $('#jobContainer').hide();
+
+        });
+    });
+    $(document).ready(function() {
+
+        $('#jobContainer').hide();
+
+        $('#signupForm').ajaxForm({
             success : function (response) {
                 console.log(response);
                 $('p').text(response.authInfo.message);
             }
         });
+
+        $('#loginForm').ajaxForm({
+            success : function (response) {
+                console.log(response);
+                $('#notification').text(response.authInfo.message);
+                authToken = response.user.token;
+
+                var mechanic = response.user;
+                socket.emit('mechanic_register', mechanic);
+                console.log("Mechanic has registered");
+            }
+        });
+
+
     });
 </script>
 
 <h1>Hello Mechanic</h1>
-<h5>Sign Up To Our Registry</h5>
-<form id="loginForm" action="/signupMechanic" method="post">
+<div>
+    <p id="online"><b></b></p>
+</div>
+<h4>Sign Up To Our Registry</h4>
+<form id="signupForm" action="/signupMechanic" method="post">
     Name:<br>
     <input type="text" name="name"><br>
     Latitude:<br>
@@ -55,7 +81,20 @@
     <input type="text" name="phoneNumber"><br>
     <input type="submit" value="Sign Up" />
 </form>
-c
+<h4>Please sign in</h4>
+<form id="loginForm" action="/loginMechanic" method="post">
+    Name:<br>
+    <input type="text" name="name"><br>
+    Phone Number:<br>
+    <input type="text" name="phoneNumber"><br>
+    <input type="submit" value="Login" />
+</form>
+<p id="notification"><b></b></p>
+<div id="jobContainer">
+    <p id="job"><b></b></p>
+    <button id="acceptJob" value="Accept">Accept</button>
+    <button id="rejectJob" value="Reject">Reject</button>
+</div>
 <div id="map">
     <!-- We will load a map here later-->
 </div>

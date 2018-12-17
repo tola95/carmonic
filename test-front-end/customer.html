@@ -18,91 +18,116 @@
     var socket = io.connect();
     socket.on('connect', function() {
         console.log('Customer has connected to the server!');
+        $('#online').text("Online");
     });
-    //socket.emit('customer_register', 'rand_customer_id');
+    socket.on('disconnect', function() {
+        console.log('Customer has disconnected from the server!');
+        $('#online').text("Offline");
+    });
     $(document).ready(function(){
-//        $('#loginForm').submit(function(e){
-//            console.log(e);
-//            e.preventDefault();
-//            var customerUsername = $('#loginForm').find('input[name="customerUsername"]').val();
-//            socket.emit('customer_register', customerUsername);
-//            console.log("Customer has registered");
-//            return true;
-//        });
 
-        function notifyMechanic() {
-            //todo
-            return undefined;
-        }
+        var mechanicWait = 8000;
 
         $('#loginForm').ajaxForm({
-            success : function (response) {
+            success: function (response) {
                 console.log(response);
-                $('p').text(response.authInfo.message);
+                $('#notification').text(response.authInfo.message);
                 authToken = response.user.token;
 
-                $('#getMechanicForm').ajaxForm({
-                    type : 'GET',
-                    url : "http://localhost:3000/getMechanics",
-                    headers : {
-                        Authorization : 'Bearer ' + authToken
-                    },
-                    success : function (response) {
-                        console.log(response);
-                        if (response.user) {
-//                            var customerUsername = response.user.id;
-//                            socket.emit('customer_register', customerUsername);
-//                            console.log("Customer has registered");
-                            var i=0;
-                            while (i<response.length) {
-                                var mechanic = notifyMechanic(response[i]);
-                                if (mechanic) {
-                                    console.log(mechanic);
+                if (response.user) {
+                    var customer = response.user;
+                    socket.emit('customer_register', customer);
+                    console.log("Customer has registered");
+
+                    $('#getMechanicForm').ajaxForm({
+                        type: 'GET',
+                        url: "http://localhost:3000/getMechanics",
+                        headers: {
+                            Authorization: 'Bearer ' + authToken
+                        },
+                        success: function (response) {
+                            console.log(response);
+
+                            var notifyMechanic = function (i) {
+                                if (i >= response.length) {
+                                    $('#notification').text('No mechanic accepted job. Sorry.');
                                 }
-                                i++;
-                            }
+
+                                var mechanic = response[i];
+
+                                //start a timer
+                                //after 8 seconds, remove socket listener and try next mechanic
+                                var x = setInterval(function () {
+                                    if (mechanicWait < 0) {
+                                        mechanicWait = 8000;
+                                        socket.removeListener('job_accept', function(mechanic) {
+                                            console.log('Mechanic ' + mechanic.name + ' has accepted job');
+                                            clearInterval(x);
+                                            $('#notification').text('Mechanic ' + mechanic.name + ' has accepted job');
+                                        });
+                                        clearInterval(x);
+                                        notifyMechanic(i+1);
+                                    } else {
+                                        mechanicWait -= 1000;
+                                    }
+                                }, 1000);
+
+                                //shoot off a mechanic job request
+                                socket.emit('customer_request_job', mechanic, customer);
+
+                                //listen for response
+                                //if response is received before 8 seconds then return true
+                                socket.on('job_accept', function(mechanic) {
+                                    console.log('Mechanic ' + mechanic.name + ' has accepted job');
+                                    clearInterval(x);
+                                    $('#notification').text('Mechanic ' + mechanic.name + ' has accepted job');
+                                });
+
+                                socket.on('job_reject', function(mechanic) {
+                                    console.log('Mechanic ' + mechanic.name + ' has rejected job');
+                                    clearInterval(x);
+                                    $('#notification').text('No mechanic accepted job. Sorry.');
+                                });
+                            };
+
+                            notifyMechanic(0);
                         }
-                    }
-                });
+                    });
+                }
             }
-        });
-
-
-
-        $('#getMechanicButton').click(function() {
-            var lat;
-            var long;
-
-//            console.log("1");
-//            if (navigator && navigator.geolocation) {
-//                console.log("2");
-//                navigator.geolocation.getCurrentPosition(function (position) {
-//                    lat = position.coords.latitude;
-//                    long = position.coords.longitude;
-//                    console.log("3");
-//                    $.get('/getMechanics', { latitude: lat, longitude: long }, function(response){
-//                        console.log(response);
-//                    });
-//                });
-//            } else {
-//                console.log("4");
-//                lat = 0.0;
-//                long = 0.0;
-//                $.get('/getMechanics', { latitude: lat, longitude: long }, function(response){
-//                    console.log(response);
-//                });
-//            }
-
-            $.get('/getMechanics', { latitude: lat, longitude: long }, function(response){
-                console.log(response);
-            });
-
         });
     });
 
 </script>
 
 <h1>Welcome to Carmonic</h1>
+<div>
+    <p id="online"><b></b></p>
+</div>
+<div>
+    <h4>Sign Up</h4>
+    <form id="signUpForm" action="/signup" method="post">
+        <div>
+            <label>First Name:</label>
+            <input type="text" name="firstname"/><br/>
+        </div>
+        <div>
+            <label>Last Name:</label>
+            <input type="text" name="lastname"/><br/>
+        </div>
+        <div>
+            <label>Email:</label>
+            <input type="text" name="email"/><br/>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="text" name="password"/><br/>
+        </div>
+        <div>
+            <input type="submit" value="Login"/>
+        </div>
+    </form>
+</div>
 <div>
 <h4>Please sign in</h4>
 <form id="loginForm" action="/login" method="post">
@@ -129,9 +154,6 @@
         <input type="submit" value="Get A Mechanic"/>
     </form>
 </div>
-<h4 id="notification">
-    <!-- Some info will be displayed here-->
-</h4>
 <div id="map">
     <!-- We will load a map here later-->
 </div>

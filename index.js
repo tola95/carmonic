@@ -66,19 +66,28 @@ app.post('/signupMechanic',
         session: false
     }),
     function(req, res) {
+        res.send(response);
+    }
+);
+
+app.post('/loginMechanic',
+    passport.authenticate('loginMechanic', {
+        session: false
+    }),
+    function(req, res) {
         //generate token
-        // jwt.sign(req, function(err, req) {
-        //     if (err) {
-        //         res.send(err);
-        //         return;
-        //     }
-        //     response = {
-        //         user: req.user,
-        //         authInfo: req.authInfo
-        //     };
+        jwt.sign(req, function(err, req) {
+            if (err) {
+                res.send(err);
+                return;
+            }
+            response = {
+                user: req.user,
+                authInfo: req.authInfo
+            };
 
             res.send(response);
-        //});
+        });
     }
 );
 
@@ -97,12 +106,13 @@ app.get('/getMechanics',
 });
 
 app.get('/notifyMechanic', (req, res) => {
-    var mechanicUsername = req.query.mechanicUsername;
-    var customerUsername = req.query.customerUsername;
-    console.log(mechanicUsername);
+    var mechanic = req.query.mechanic;
+    var customer = req.query.customer;
 
-    io.to(currentConnections[mechanicUsername].socket.id).emit('job', customerUsername);
-    res.send(mechanicUsername);
+    console.log(mechanic);
+
+    io.to(currentConnections[mechanic.id].socket.id).emit('job', mechanic, customer);
+    res.send(mechanic);
 });
 
 server.listen(3000, function() {

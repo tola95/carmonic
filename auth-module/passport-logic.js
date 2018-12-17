@@ -115,4 +115,27 @@ passport.use('signupMechanic', new LocalStrategy(
     })
 );
 
+passport.use('loginMechanic', new LocalStrategy(
+    LOCAL_STRATEGY_CONFIG_MECHANIC,
+    function (req, username, password, done) {
+        pool.query('SELECT * FROM "TestMechanics" WHERE "name"=$1', [req.body.name], (err, result) => {
+            if (err) {
+                logger.error("Problem searching for mechanic " + req.body.name + " in database");
+                logger.error(err);
+                return done(err);
+            }
+
+            if (result.rows[0]) {
+                var user = result.rows[0];
+                logger.info("Mechanic " + req.body.name + " successfully logged in");
+                return done(null, user, {message: "Successfully logged in"});
+            } else {
+                logger.info("Incorrect login attempt for " + req.body.name);
+                return done(null, {}, {message: "Incorrect username or password"});
+            }
+        });
+    })
+);
+
+
 exports.passport = passport;

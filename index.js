@@ -28,8 +28,6 @@ app.post('/signup',
         session: false
     }),
     function(req, res) {
-        // `req.user` contains the authenticated user.
-        //res.redirect('/users/' + req.user.username);
         response = {
             user: req.user,
             authInfo: req.authInfo
@@ -59,13 +57,28 @@ app.post('/login',
     }
 );
 
-app.post('/deleteaccount')
+app.post('/deleteaccount',
+    passport.authenticate('deleteaccount', {
+        session: false
+    }),
+    function (req, res) {
+        response = {
+            user: req.user,
+            authInfo: req.authInfo
+        };
+        res.send(response);
+    }
+);
 
 app.post('/signupMechanic',
     passport.authenticate('signupMechanic', {
         session: false
     }),
     function(req, res) {
+        response = {
+            user: req.user,
+            authInfo: req.authInfo
+        };
         res.send(response);
     }
 );
@@ -114,6 +127,19 @@ app.get('/notifyMechanic', (req, res) => {
     io.to(currentConnections[mechanic.id].socket.id).emit('job', mechanic, customer);
     res.send(mechanic);
 });
+
+app.post('/deleteMechanic',
+    passport.authenticate('deleteMechanic', {
+        session: false
+    }),
+    function (req, res) {
+        response = {
+            user: req.user,
+            authInfo: req.authInfo
+        };
+        res.send(response);
+    }
+);
 
 server.listen(3000, function() {
     console.log('Carmonic listening on port 3000!');

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang = "en">
+<html lang="en">
 <head>
     <meta charset="utf-8"/>
     <title>Customer</title>
@@ -16,22 +16,24 @@
 <script type="text/javascript">
     let authToken;
     var socket = io.connect();
-    socket.on('connect', function() {
+    socket.on('connect', function () {
         console.log('Customer has connected to the server!');
         $('#online').text("Online");
     });
-    socket.on('disconnect', function() {
+    socket.on('disconnect', function () {
         console.log('Customer has disconnected from the server!');
         $('#online').text("Offline");
     });
-    $(document).ready(function(){
+    $(document).ready(function () {
 
         var mechanicWait = 8000;
 
         $('#loginForm').ajaxForm({
             success: function (response) {
                 console.log(response);
-                $('#notification').text(response.authInfo.message);
+                var newdiv = document.createElement("p");
+                newdiv.innerHTML = response.authInfo.message;
+                $('#notifications').prepend(newdiv);
                 authToken = response.user.token;
 
                 if (response.user) {
@@ -50,7 +52,7 @@
 
                             var notifyMechanic = function (i) {
                                 if (i >= response.length) {
-                                    $('#notification').text('No mechanic accepted job. Sorry.');
+                                    $('#notifications').prepend("<p>No mechanic accepted job. Sorry.</p>");
                                 }
 
                                 var mechanic = response[i];
@@ -60,13 +62,15 @@
                                 var x = setInterval(function () {
                                     if (mechanicWait < 0) {
                                         mechanicWait = 8000;
-                                        socket.removeListener('job_accept', function(mechanic) {
+                                        socket.removeListener('job_accept', function (mechanic) {
                                             console.log('Mechanic ' + mechanic.name + ' has accepted job');
                                             clearInterval(x);
-                                            $('#notification').text('Mechanic ' + mechanic.name + ' has accepted job');
+                                            var newdiv = document.createElement("p");
+                                            newdiv.innerHTML = 'Mechanic ' + mechanic.name + ' has accepted job';
+                                            $('#notifications').prepend(newdiv);
                                         });
                                         clearInterval(x);
-                                        notifyMechanic(i+1);
+                                        notifyMechanic(i + 1);
                                     } else {
                                         mechanicWait -= 1000;
                                     }
@@ -77,16 +81,18 @@
 
                                 //listen for response
                                 //if response is received before 8 seconds then return true
-                                socket.on('job_accept', function(mechanic) {
+                                socket.on('job_accept', function (mechanic) {
                                     console.log('Mechanic ' + mechanic.name + ' has accepted job');
                                     clearInterval(x);
-                                    $('#notification').text('Mechanic ' + mechanic.name + ' has accepted job');
+                                    var newdiv = document.createElement("p");
+                                    newdiv.innerHTML = 'Mechanic ' + mechanic.name + ' has accepted job';
+                                    $('#notifications').prepend(newdiv);
                                 });
 
-                                socket.on('job_reject', function(mechanic) {
+                                socket.on('job_reject', function (mechanic) {
                                     console.log('Mechanic ' + mechanic.name + ' has rejected job');
                                     clearInterval(x);
-                                    $('#notification').text('No mechanic accepted job. Sorry.');
+                                    notifyMechanic(i + 1);
                                 });
                             };
 
@@ -96,63 +102,108 @@
                 }
             }
         });
+
+        $('#signUpForm').ajaxForm({
+            success: function (response) {
+                console.log(response);
+                var newdiv = document.createElement("p");
+                newdiv.innerHTML = response.authInfo.message;
+                $('#notifications').prepend(newdiv);
+            }
+        });
+
+        //Todo: Check for authorisation header
+        $('#deleteForm').ajaxForm({
+            success: function (response) {
+                console.log(response);
+                var newdiv = document.createElement("p");
+                newdiv.innerHTML = response.authInfo.message;
+                $('#notifications').prepend(newdiv);
+            }
+        });
     });
 
 </script>
 
-<h1>Welcome to Carmonic</h1>
 <div>
+    <h1>Welcome to Carmonic</h1>
     <p id="online"><b></b></p>
 </div>
-<div>
-    <h4>Sign Up</h4>
-    <form id="signUpForm" action="/signup" method="post">
+<div style="width: 100%; overflow: hidden;">
+    <div style="width: 50%; float: left;">
         <div>
-            <label>First Name:</label>
-            <input type="text" name="firstname"/><br/>
+            <h4>Step 1: Create a new account</h4>
+            <form id="signUpForm" action="/signup" method="post">
+                <div>
+                    <label>First Name:</label>
+                    <input type="text" name="firstname"/><br/>
+                </div>
+                <div>
+                    <label>Last Name:</label>
+                    <input type="text" name="lastname"/><br/>
+                </div>
+                <div>
+                    <label>Email:</label>
+                    <input type="text" name="email"/><br/>
+                </div>
+                <div>
+                    <label>Password:</label>
+                    <input type="text" name="password"/><br/>
+                </div>
+                <div>
+                    <input type="submit" value="Sign Up"/>
+                </div>
+            </form>
         </div>
         <div>
-            <label>Last Name:</label>
-            <input type="text" name="lastname"/><br/>
+            <h4>Step 2: Sign In</h4>
+            <form id="loginForm" action="/login" method="post">
+                <div>
+                    <label>Email:</label>
+                    <input type="text" name="email"/><br/>
+                </div>
+                <div>
+                    <label>Password:</label>
+                    <input type="text" name="password"/><br/>
+                </div>
+                <div>
+                    <input type="submit" value="Login"/>
+                </div>
+            </form>
         </div>
         <div>
-            <label>Email:</label>
-            <input type="text" name="email"/><br/>
+            <h4>Step 3: Put in your current location and request a mechanic</h4>
+            <form id="getMechanicForm">
+                Latitude:<br>
+                <input type="text" name="latitude"><br>
+                Longitude:<br>
+                <input type="text" name="longitude"><br>
+                <input type="submit" value="Get A Mechanic"/>
+            </form>
         </div>
         <div>
-            <label>Password:</label>
-            <input type="text" name="password"/><br/>
+            <h4>Step 4: Delete the account you created</h4>
+            <form id="deleteForm" action="/deleteaccount" method="post">
+                <div>
+                    <label>Email:</label>
+                    <input type="text" name="email"/><br/>
+                </div>
+                <div>
+                    <label>Password:</label>
+                    <input type="text" name="password"/><br/>
+                </div>
+                <div>
+                    <input type="submit" value="Delete"/>
+                </div>
+            </form>
         </div>
-        <div>
-            <input type="submit" value="Login"/>
-        </div>
-    </form>
-</div>
-<div>
-<h4>Please sign in</h4>
-<form id="loginForm" action="/login" method="post">
-    <div>
-        <label>Email:</label>
-        <input type="text" name="email"/><br/>
     </div>
-    <div>
-        <label>Password:</label>
-        <input type="text" name="password"/><br/>
+    <div style="margin-left: 58%;">
+        <p><b>Notifications</b></p>
+        <div id="notifications">
+
+        </div>
     </div>
-    <div>
-        <input type="submit" value="Login"/>
-    </div>
-</form>
-</div>
-<p id="notification"><b></b></p>
-<div>
-    <form id="getMechanicForm">
-        Latitude:<br>
-        <input type="text" name="latitude"><br>
-        Longitude:<br>
-        <input type="text" name="longitude"><br>
-        <input type="submit" value="Get A Mechanic"/>
-    </form>
 </div>
 <div id="map">
     <!-- We will load a map here later-->

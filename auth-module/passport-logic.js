@@ -80,6 +80,21 @@ passport.use(stringConstants.LOGIN, new LocalStrategy(
     })
 );
 
+passport.use('deleteaccount', new LocalStrategy(
+    LOCAL_STRATEGY_CONFIG,
+    function (req, username, password, done) {
+        pool.query('DELETE FROM "Customers" WHERE "email"=$1 AND "password"=$2', [req.body.email, req.body.password], (err, result) => {
+            if (err) {
+                logger.error("Problem searching for customer " + req.body.email + " in database");
+                logger.error(err);
+                return done(err);
+            }
+            return done(null, {}, {message: "Successfully deleted account"});
+        });
+    }
+));
+
+//ToDo: Auto-generate password for mechanics
 passport.use('signupMechanic', new LocalStrategy(
     LOCAL_STRATEGY_CONFIG_MECHANIC,
     function (req, username, password, done) {
@@ -136,6 +151,20 @@ passport.use('loginMechanic', new LocalStrategy(
         });
     })
 );
+
+passport.use('deleteMechanic', new LocalStrategy(
+    LOCAL_STRATEGY_CONFIG_MECHANIC,
+    function (req, username, password, done) {
+        pool.query('DELETE FROM "TestMechanics" WHERE "name"=$1', [req.body.name], (err, result) => {
+            if (err) {
+                logger.error("Problem searching for mechanic " + req.body.name + " in database");
+                logger.error(err);
+                return done(err);
+            }
+            return done(null, {}, {message: "Successfully deleted account"});
+        });
+    }
+));
 
 
 exports.passport = passport;

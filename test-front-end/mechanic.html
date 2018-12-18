@@ -25,16 +25,35 @@
     });
     socket.on('job_request', function (mechanic, customer) {
         console.log('Mechanic has received a job from ' + customer.id);
-        $('#job').text("You have received a job from " + customer.firstname + ' ' + customer.lastname);
-        $('#jobContainer').show();
+
+        var newdiv = document.createElement("div");
+        newdiv.setAttribute("id", "jobContainer");
+
+        var p = document.createElement("p");
+        p.innerHTML = "You have received a job from " + customer.firstname + ' ' + customer.lastname;
+
+        var acceptButton = document.createElement("button");
+        acceptButton.setAttribute("id", "acceptJob");
+        acceptButton.innerHTML = "Accept";
+
+        var rejectButton = document.createElement("button");
+        rejectButton.setAttribute("id", "rejectJob");
+        rejectButton.innerHTML = "Reject";
+
+        newdiv.appendChild(p);
+        newdiv.appendChild(acceptButton);
+        newdiv.appendChild(rejectButton);
+
+        $('#notifications').prepend(newdiv);
+
         $('#acceptJob').click(function() {
             socket.emit('mechanic_accept_job', mechanic, customer);
-            $('#jobContainer').hide();
+            $('#jobContainer').remove();
 
         });
         $('#rejectJob').click(function() {
             socket.emit('mechanic_reject_job', mechanic, customer);
-            $('#jobContainer').hide();
+            $('#jobContainer').remove();
 
         });
     });
@@ -45,14 +64,18 @@
         $('#signupForm').ajaxForm({
             success : function (response) {
                 console.log(response);
-                $('p').text(response.authInfo.message);
+                var newdiv = document.createElement("p");
+                newdiv.innerHTML = response.authInfo.message;
+                $('#notifications').prepend(newdiv);
             }
         });
 
         $('#loginForm').ajaxForm({
             success : function (response) {
                 console.log(response);
-                $('#notification').text(response.authInfo.message);
+                var newdiv = document.createElement("p");
+                newdiv.innerHTML = response.authInfo.message;
+                $('#notifications').prepend(newdiv);
                 authToken = response.user.token;
 
                 var mechanic = response.user;
@@ -61,15 +84,26 @@
             }
         });
 
+        $('#deleteForm').ajaxForm({
+            success: function (response) {
+                console.log(response);
+                var newdiv = document.createElement("p");
+                newdiv.innerHTML = response.authInfo.message;
+                $('#notifications').prepend(newdiv);
+            }
+        });
+
 
     });
 </script>
-
-<h1>Hello Mechanic</h1>
 <div>
-    <p id="online"><b></b></p>
+<h1>Welcome to Carmonic for Mechanics</h1>
+<p id="online"><b></b></p>
 </div>
-<h4>Sign Up To Our Registry</h4>
+<div style="width: 100%; overflow: hidden;">
+    <div style="width: 50%; float: left;">
+<div>
+<h4>Step 1: Create a new account</h4>
 <form id="signupForm" action="/signupMechanic" method="post">
     Name:<br>
     <input type="text" name="name"><br>
@@ -81,7 +115,9 @@
     <input type="text" name="phoneNumber"><br>
     <input type="submit" value="Sign Up" />
 </form>
-<h4>Please sign in</h4>
+</div>
+<div>
+<h4>Step 2: Sign In</h4>
 <form id="loginForm" action="/loginMechanic" method="post">
     Name:<br>
     <input type="text" name="name"><br>
@@ -89,11 +125,33 @@
     <input type="text" name="phoneNumber"><br>
     <input type="submit" value="Login" />
 </form>
-<p id="notification"><b></b></p>
-<div id="jobContainer">
-    <p id="job"><b></b></p>
-    <button id="acceptJob" value="Accept">Accept</button>
-    <button id="rejectJob" value="Reject">Reject</button>
+</div>
+<div>
+    <h4>Step 3: Upon receiving customer request, accept or reject</h4>
+</div>
+<div>
+    <h4>Step 4: Delete the account you created</h4>
+    <form id="deleteForm" action="/deleteMechanic" method="post">
+        <div>
+            <label>Name:</label>
+            <input type="text" name="name"/><br/>
+        </div>
+        <div>
+            <label>Phone Number:</label>
+            <input type="text" name="phoneNumber"/><br/>
+        </div>
+        <div>
+            <input type="submit" value="Delete"/>
+        </div>
+    </form>
+</div>
+    </div>
+    <div style="margin-left: 58%;">
+        <p><b>Notifications</b></p>
+        <div id="notifications">
+
+        </div>
+    </div>
 </div>
 <div id="map">
     <!-- We will load a map here later-->

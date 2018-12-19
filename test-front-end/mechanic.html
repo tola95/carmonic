@@ -26,6 +26,8 @@
     socket.on('job_request', function (mechanic, customer) {
         console.log('Mechanic has received a job from ' + customer.id);
 
+        var mechanicWait = 8000;
+
         var newdiv = document.createElement("div");
         newdiv.setAttribute("id", "jobContainer");
 
@@ -56,6 +58,16 @@
             $('#jobContainer').remove();
 
         });
+
+        var x = setInterval(function () {
+            if (mechanicWait < 0) {
+                mechanicWait = 8000;
+                clearInterval(x);
+                $('#jobContainer').remove();
+            } else {
+                mechanicWait -= 1000;
+            }
+        }, 1000);
     });
     $(document).ready(function () {
 

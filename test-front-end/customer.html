@@ -53,6 +53,7 @@
                             var notifyMechanic = function (i) {
                                 if (i >= response.length) {
                                     $('#notifications').prepend("<p>No mechanic accepted job. Sorry.</p>");
+                                    return;
                                 }
 
                                 var mechanic = response[i];
@@ -62,12 +63,18 @@
                                 var x = setInterval(function () {
                                     if (mechanicWait < 0) {
                                         mechanicWait = 8000;
-                                        socket.removeListener('job_accept', function (mechanic) {
+                                        socket.off('job_accept', function (mechanic) {
                                             console.log('Mechanic ' + mechanic.name + ' has accepted job');
                                             clearInterval(x);
                                             var newdiv = document.createElement("p");
                                             newdiv.innerHTML = 'Mechanic ' + mechanic.name + ' has accepted job';
                                             $('#notifications').prepend(newdiv);
+                                        });
+
+                                        socket.off('job_reject', function (mechanic) {
+                                            console.log('Mechanic ' + mechanic.name + ' has rejected job');
+                                            clearInterval(x);
+                                            notifyMechanic(i + 1);
                                         });
                                         clearInterval(x);
                                         notifyMechanic(i + 1);

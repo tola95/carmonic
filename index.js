@@ -1,17 +1,26 @@
 const express = require('express');
 const app = express();
-var server = require('http').Server(app);
-var bodyParser = require("body-parser");
-var {io, currentConnections} = require("./auth-module/socket-io-logic")(server);
-var postgresLogic = require("./db-module/postgres-logic");
-var passport = require("./auth-module/passport-logic").passport;
-var crypto = require('crypto');
+const fs = require('fs');
+const server = require('http').Server(app);
+const bodyParser = require("body-parser");
+const postgresLogic = require("./db-module/postgres-logic");
+const passport = require("./auth-module/passport-logic").passport;
+const crypto = require('crypto');
 const expressJwt = require('express-jwt');
 //ToDo: Store secret as environment variable for when we scale up
-var secret = crypto.randomBytes(256);
+const secret = crypto.randomBytes(256);
 const jwt = require('./auth-module/jwt-logic')(secret);
 const authenticate = expressJwt({secret : secret});
-var logger = require('./logging-module/winston-logic.js');
+const logger = require('./logging-module/winston-logic.js');
+
+const credentials = {
+    key: fs.readFileSync('carmonic.key'),
+    cert: fs.readFileSync('carmonic.crt'),
+};
+
+const https = require('https');
+const httpsServer = https.createServer(credentials, app);
+const {io, currentConnections} = require("./auth-module/socket-io-logic")(httpsServer);
 
 /*
  * HTTP ENDPOINTS
@@ -52,6 +61,7 @@ app.post('/login',
                 authInfo: req.authInfo
              };
 
+            res.set('Content-Type', 'text/plain');
             res.send(response);
         });
     }
@@ -143,4 +153,7 @@ app.post('/deleteMechanic',
 
 server.listen(3000, function() {
     console.log('Carmonic listening on port 3000!');
+});
+httpsServer.listen(8443, function() {
+    console.log('Carmonic listening securely on port 8443!');
 });

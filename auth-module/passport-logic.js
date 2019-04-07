@@ -1,8 +1,12 @@
+var notifications = require('../notifications/notifications.js');
+
 var passport = require('passport')
     , LocalStrategy = require('passport-local').Strategy;
 var pool = require("../db-module/postgres-logic").pool;
 var stringConstants = require("../string-constants.json");
 var logger = require('../logging-module/winston-logic.js').logger;
+var AWS = require('aws-sdk');
+AWS.config.loadFromPath('./awsConfig.json');
 
 /*
  * AUTHENTICATION LOGIC
@@ -48,6 +52,17 @@ passport.use(stringConstants.SIGNUP, new LocalStrategy(
                     } else {
                         pool.query('COMMIT');
                         logger.info("Customer " + req.body.email + " created");
+                        var email = notifications.generateRawEmail(req.body.email, stringConstants.SIGNUP_EMAIL_TITLE, stringConstants.SIGNUP_EMAIL_MESSAGE)
+
+                        new AWS.SES({apiVersion: '2010-12-01'}).sendRawEmail(email, function(err, data) {
+                            if(err) {
+                                console.error(err, err.stack);
+                            }
+                            else {
+                                console.log(data);
+                            }
+                        });
+
                         return done(null, {
                             email: req.body.email
                         }, {message: "Successfully signed up"});

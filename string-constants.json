@@ -8,5 +8,7 @@
   "SOCKET_DISCONNECT_EVENT" : "disconnect",
   "PG_ERROR_EVENT" : "error",
   "MECHANIC_TABLE" : "Mapped Mechanics",
-  "CUSTOMER_TABLE" : "Customers"
+  "CUSTOMER_TABLE" : "Customers",
+  "SIGNUP_EMAIL_TITLE": "Welcome to Carmonic!",
+  "SIGNUP_EMAIL_MESSAGE": "Thank you for joining us!"
 }

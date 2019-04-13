@@ -12,6 +12,8 @@ module.exports = function (secret) {
                 req.user.token = token;
                 return callback(null, req);
             });
+        } else if (req.authInfo) {
+            return callback(null, req);
         } else {
             return callback("User was not authenticated", req);
         }

@@ -20,7 +20,7 @@ const credentials = {
 
 const https = require('https');
 const httpsServer = https.createServer(credentials, app);
-const {io, currentConnections} = require("./auth-module/socket-io-logic")(httpsServer);
+const {io, currentConnections} = require("./auth-module/socket-io-logic")(server);
 
 /*
  * HTTP ENDPOINTS
@@ -126,16 +126,6 @@ app.get('/getMechanics',
             });
 
         }
-});
-
-app.get('/notifyMechanic', (req, res) => {
-    var mechanic = req.query.mechanic;
-    var customer = req.query.customer;
-
-    console.log(mechanic);
-
-    io.to(currentConnections[mechanic.id].socket.id).emit('job', mechanic, customer);
-    res.send(mechanic);
 });
 
 app.post('/deleteMechanic',

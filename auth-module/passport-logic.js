@@ -1,11 +1,12 @@
 var notifications = require('../notifications/notifications.js');
-
-var passport = require('passport')
-    , LocalStrategy = require('passport-local').Strategy;
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
 var pool = require("../db-module/postgres-logic").pool;
 var stringConstants = require("../string-constants.json");
 var logger = require('../logging-module/winston-logic.js').logger;
+var passwordEncryptUtil = require('./passwordEncryptionUtil.js');
 var AWS = require('aws-sdk');
+
 AWS.config.loadFromPath('./awsConfig.json');
 
 /*
@@ -44,29 +45,31 @@ passport.use(stringConstants.SIGNUP, new LocalStrategy(
                 logger.info("Customer " + req.body.email + " already exists");
                 return done(null, {email: user.email}, {message: "User already exists"});
             } else {
-                pool.query('INSERT INTO "Customers" ("firstname", "lastname", "email", "password") VALUES ($1, $2, $3, $4)', [req.body.firstname, req.body.lastname, req.body.email, req.body.password], function (err, result) {
-                    if (err) {
-                        logger.error("Problem adding customer " + req.body.email + " to database");
-                        logger.error(err);
-                        return done(err);
-                    } else {
-                        pool.query('COMMIT');
-                        logger.info("Customer " + req.body.email + " created");
-                        var email = notifications.generateRawEmail(req.body.email, stringConstants.SIGNUP_EMAIL_TITLE, stringConstants.SIGNUP_EMAIL_MESSAGE)
+                passwordEncryptUtil.cryptPassword(req.body.password, function(encryptionError, hash) {
+                    pool.query('INSERT INTO "Customers" ("firstname", "lastname", "email", "password") VALUES ($1, $2, $3, $4)', [req.body.firstname, req.body.lastname, req.body.email, hash], function (err, result) {
+                        if (err) {
+                            logger.error("Problem adding customer " + req.body.email + " to database");
+                            logger.error(err);
+                            return done(err);
+                        } else {
+                            pool.query('COMMIT');
+                            logger.info("Customer " + req.body.email + " created");
+                            var email = notifications.generateRawEmail(req.body.email, stringConstants.SIGNUP_EMAIL_TITLE, stringConstants.SIGNUP_EMAIL_MESSAGE)
 
-                        new AWS.SES({apiVersion: '2010-12-01'}).sendRawEmail(email, function(err, data) {
-                            if(err) {
-                                console.error(err, err.stack);
-                            }
-                            else {
-                                console.log(data);
-                            }
-                        });
+                            new AWS.SES({apiVersion: '2010-12-01'}).sendRawEmail(email, function(err, data) {
+                                if(err) {
+                                    console.error(err, err.stack);
+                                }
+                                else {
+                                    console.log(data);
+                                }
+                            });
 
-                        return done(null, {
-                            email: req.body.email
-                        }, {message: "Successfully signed up"});
-                    }
+                            return done(null, {
+                                email: req.body.email
+                            }, {message: "Successfully signed up"});
+                        }
+                    });
                 });
             }
         });

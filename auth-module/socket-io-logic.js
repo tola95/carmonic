@@ -72,6 +72,54 @@ module.exports = function (server) {
             }
         });
 
+        socket.on('mechanic_start_job', function (mechanic, customer) {
+            mechanic = parseIfString(mechanic);
+            customer = parseIfString(customer);
+            if (mechanic && customer) {
+                console.log('mechanic ' + mechanic.name + ' started customer ' + customer.firstname + ' ' + customer.lastname + ' job');
+                var connection = currentConnections[customer.id];
+                if (connection) {
+                    io.to(currentConnections[customer.id].socket.id).emit('job_start', mechanic);
+                }
+            }
+        });
+
+        socket.on('mechanic_conclude_job', function (mechanic, customer) {
+            mechanic = parseIfString(mechanic);
+            customer = parseIfString(customer);
+            if (mechanic && customer) {
+                console.log('mechanic ' + mechanic.name + ' concluded customer ' + customer.firstname + ' ' + customer.lastname + ' job');
+                var connection = currentConnections[customer.id];
+                if (connection) {
+                    io.to(currentConnections[customer.id].socket.id).emit('job_conclude', mechanic);
+                }
+            }
+        });
+
+        socket.on('mechanic_update_location', function (mechanic, customer) {
+            mechanic = parseIfString(mechanic);
+            customer = parseIfString(customer);
+            if (mechanic && customer) {
+                console.log('mechanic ' + mechanic.name + ' updated current location to lat: ' + mechanic.latitude + ' and long: ' + mechanic.longitude);
+                var connection = currentConnections[customer.id];
+                if (connection) {
+                    io.to(currentConnections[customer.id].socket.id).emit('update_location', mechanic);
+                }
+            }
+        });
+
+        socket.on('customer_update_location', function (mechanic, customer) {
+            mechanic = parseIfString(mechanic);
+            customer = parseIfString(customer);
+            if (mechanic && customer) {
+                console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' updated current location to lat: ' + customer.latitude + ' and long: ' + customer.longitude);
+                var connection = currentConnections[mechanic.id];
+                if (connection) {
+                    io.to(currentConnections[mechanic.id].socket.id).emit('update_location', mechanic, customer);
+                }
+            }
+        });
+
         //On closing the app, the reference to the corresponding party's socket connection is terminated
         socket.on(stringConstants.SOCKET_DISCONNECT_EVENT, function(){
             if (socket._username) {

@@ -15,6 +15,7 @@
 
 <script type="text/javascript">
     var socket = io.connect();
+    var mechanicArrived = false;
     socket.on('connect', function () {
         console.log('Mechanic has connected to the server!');
         $('#online').text("Online");
@@ -27,7 +28,6 @@
         console.log('Mechanic has received a job from ' + customer.id);
 
         var mechanicWait = 8000;
-        var jobConcluded = false;
 
         var newdiv = document.createElement("div");
         newdiv.setAttribute("id", "jobContainer");
@@ -44,8 +44,8 @@
         rejectButton.innerHTML = "Reject";
 
         var concludeButton = document.createElement("button");
-        rejectButton.setAttribute("id", "concludeJob");
-        rejectButton.innerHTML = "Conclude";
+        concludeButton.setAttribute("id", "concludeJob");
+        concludeButton.innerHTML = "Conclude";
 
         newdiv.appendChild(p);
         newdiv.appendChild(acceptButton);
@@ -59,6 +59,11 @@
             notdiv.innerHTML = "Accepted job";
             $('#notifications').prepend(notdiv);
             newdiv.appendChild(concludeButton);
+            $('#concludeJob').click(function () {
+                socket.emit('mechanic_conclude_job', mechanic, customer);
+                $('#jobContainer').remove();
+            });
+            newdiv.removeChild(acceptButton);
             var crd;
 
             var options = {
@@ -81,9 +86,8 @@
             }
 
             var y = setInterval(function () {
-                if (jobConcluded) {
+                if (mechanicArrived) {
                     clearInterval(y);
-                    $('#jobContainer').remove();
                 } else {
                     navigator.geolocation.getCurrentPosition(success, error, options);
                     mechanic.longitude = crd.longitude;
@@ -99,21 +103,26 @@
             $('#jobContainer').remove();
 
         });
-        $('#concludeJob').click(function () {
-            socket.emit('mechanic_conclude_job', mechanic, customer);
-            $('#jobContainer').remove();
-
-        });
 
         var x = setInterval(function () {
             if (mechanicWait < 0) {
                 mechanicWait = 8000;
                 clearInterval(x);
-                $('#jobContainer').remove();
             } else {
                 mechanicWait -= 1000;
             }
         }, 1000);
+    });
+    socket.on('update_location', function (mechanic, customer) {
+        var calculate_distance = function (x1, x2, y1, y2) {
+            return Math.hypot(x2-y2, x1-y1);
+        };
+        var distance = calculate_distance(customer.latitude, customer.longitude, mechanic.latitude, mechanic.longitude);
+        console.log('distance: ' + distance );
+        if (distance < 5) {
+            socket.emit('mechanic_start_job', mechanic, customer);
+            mechanicArrived = true;
+        }
     });
     $(document).ready(function () {
 

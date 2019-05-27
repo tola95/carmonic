@@ -20,7 +20,7 @@ const credentials = {
 
 const https = require('https');
 const httpsServer = https.createServer(credentials, app);
-const {io, currentConnections} = require("./auth-module/socket-io-logic")(server);
+const {io, currentConnections} = require("./auth-module/socket-io-logic")(httpsServer);
 
 /*
  * HTTP ENDPOINTS

@@ -11,7 +11,7 @@
         src="https://code.jquery.com/jquery-3.3.1.min.js"
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
-<script src="http://malsup.github.com/jquery.form.js"></script>
+<script src="jqueryForm.js"></script>
 
 <script type="text/javascript">
     var socket = io.connect();
@@ -27,6 +27,7 @@
         console.log('Mechanic has received a job from ' + customer.id);
 
         var mechanicWait = 8000;
+        var jobConcluded = false;
 
         var newdiv = document.createElement("div");
         newdiv.setAttribute("id", "jobContainer");
@@ -42,6 +43,10 @@
         rejectButton.setAttribute("id", "rejectJob");
         rejectButton.innerHTML = "Reject";
 
+        var concludeButton = document.createElement("button");
+        rejectButton.setAttribute("id", "concludeJob");
+        rejectButton.innerHTML = "Conclude";
+
         newdiv.appendChild(p);
         newdiv.appendChild(acceptButton);
         newdiv.appendChild(rejectButton);
@@ -50,11 +55,52 @@
 
         $('#acceptJob').click(function () {
             socket.emit('mechanic_accept_job', mechanic, customer);
-            $('#jobContainer').remove();
+            var notdiv = document.createElement("p");
+            notdiv.innerHTML = "Accepted job";
+            $('#notifications').prepend(notdiv);
+            newdiv.appendChild(concludeButton);
+            var crd;
+
+            var options = {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            };
+
+            function success(pos) {
+                crd = pos.coords;
+
+                console.log('Your current position is:');
+                console.log(`Latitude : ${crd.latitude}`);
+                console.log(`Longitude: ${crd.longitude}`);
+                console.log(`More or less ${crd.accuracy} meters.`);
+            }
+
+            function error(err) {
+                console.warn(`ERROR(${err.code}): ${err.message}`);
+            }
+
+            var y = setInterval(function () {
+                if (jobConcluded) {
+                    clearInterval(y);
+                    $('#jobContainer').remove();
+                } else {
+                    navigator.geolocation.getCurrentPosition(success, error, options);
+                    mechanic.longitude = crd.longitude;
+                    mechanic.latitude = crd.latitude;
+                    console.log(mechanic);
+                    socket.emit('mechanic_update_location', mechanic, customer);
+                }
+            }, 5000);
 
         });
         $('#rejectJob').click(function () {
             socket.emit('mechanic_reject_job', mechanic, customer);
+            $('#jobContainer').remove();
+
+        });
+        $('#concludeJob').click(function () {
+            socket.emit('mechanic_conclude_job', mechanic, customer);
             $('#jobContainer').remove();
 
         });

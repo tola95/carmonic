@@ -1,4 +1,6 @@
 const stringConstants = require("../string-constants.json");
+var pool = require("../db-module/postgres-logic").pool;
+var logger = require('../logging-module/winston-logic.js').logger;
 
 module.exports = function (server) {
     const io = require('socket.io').listen(server);
@@ -19,7 +21,7 @@ module.exports = function (server) {
         socket.on(stringConstants.SOCKET_MECHANIC_REGISTRATION_EVENT, function (data) {
             data = parseIfString(data);
             if (data) {
-                console.log('mechanic ' + data.name + ' registered');
+                console.log('mechanic ' + data.email + ' registered');
                 currentConnections[data.id] = {mechanicUsername: data.id, socket: socket};
                 socket._username = data.id;
             }
@@ -40,7 +42,7 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic) {
-                console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' requested mechanic ' + mechanic.name + ' job');
+                console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' requested mechanic ' + mechanic.email + ' job');
                 var connection = currentConnections[mechanic.id];
                 if (connection) {
                     io.to(currentConnections[mechanic.id].socket.id).emit('job_request', mechanic, customer);
@@ -52,7 +54,7 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
-                console.log('mechanic ' + mechanic.name + ' accepted customer ' + customer.firstname + ' ' + customer.lastname + ' job');
+                console.log('mechanic ' + mechanic.email + ' accepted customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 var connection = currentConnections[customer.id];
                 if (connection) {
                     io.to(currentConnections[customer.id].socket.id).emit('job_accept', mechanic);
@@ -64,7 +66,7 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
-                console.log('mechanic ' + mechanic.name + ' rejected customer ' + customer.firstname + ' ' + customer.lastname + ' job');
+                console.log('mechanic ' + mechanic.email + ' rejected customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 var connection = currentConnections[customer.id];
                 if (connection) {
                     io.to(currentConnections[customer.id].socket.id).emit('job_reject', mechanic);
@@ -76,7 +78,7 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
-                console.log('mechanic ' + mechanic.name + ' started customer ' + customer.firstname + ' ' + customer.lastname + ' job');
+                console.log('mechanic ' + mechanic.email + ' started customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 var connection = currentConnections[customer.id];
                 if (connection) {
                     io.to(currentConnections[customer.id].socket.id).emit('job_start', mechanic);
@@ -88,7 +90,7 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
-                console.log('mechanic ' + mechanic.name + ' concluded customer ' + customer.firstname + ' ' + customer.lastname + ' job');
+                console.log('mechanic ' + mechanic.email + ' concluded customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 var connection = currentConnections[customer.id];
                 if (connection) {
                     io.to(currentConnections[customer.id].socket.id).emit('job_conclude', mechanic);
@@ -100,11 +102,24 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
-                console.log('mechanic ' + mechanic.name + ' updated current location to lat: ' + mechanic.latitude + ' and long: ' + mechanic.longitude);
+                console.log('mechanic ' + mechanic.email + ' updated current location to lat: ' + mechanic.latitude + ' and long: ' + mechanic.longitude);
                 var connection = currentConnections[customer.id];
                 if (connection) {
                     io.to(currentConnections[customer.id].socket.id).emit('update_location', mechanic);
                 }
+            } else if (mechanic) {
+                //In this case, the mechanic is not currently on a job. We just update his location in the DB
+                console.log('mechanic ' + mechanic.email + ' updated current location to lat: ' + mechanic.latitude + ' and long: ' + mechanic.longitude);
+                pool.query('UPDATE "TestMechanics" SET "latitude"=$1, "longitude"=$2 WHERE "email"=$3 ', [mechanic.latitude, mechanic.longitude, mechanic.email], function (err, result) {
+                    if (err) {
+                        logger.error("Problem adding mechanic " + mechanic.email + " to database");
+                        logger.error(err);
+                        return done(err);
+                    } else {
+                        pool.query('COMMIT');
+                        logger.info("Mechanic " + mechanic.email + " updated location");
+                    }
+                });
             }
         });
 

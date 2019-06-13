@@ -145,9 +145,34 @@
                 $('#notifications').prepend(newdiv);
                 authToken = response.user.token;
 
-                var mechanic = response.user;
-                socket.emit('mechanic_register', mechanic);
-                console.log("Mechanic has registered");
+                if (authToken) {
+                    var mechanic = response.user;
+                    socket.emit('mechanic_register', mechanic);
+                    console.log("Mechanic has registered");
+
+                    var z = setInterval(function () {
+                        navigator.geolocation.getCurrentPosition(function (pos) {
+                            crd = pos.coords;
+
+                            console.log('Your current position is:');
+                            console.log(`Latitude : ${crd.latitude}`);
+                            console.log(`Longitude: ${crd.longitude}`);
+                            console.log(`More or less ${crd.accuracy} meters.`);
+
+                            mechanic.longitude = crd.longitude;
+                            mechanic.latitude = crd.latitude;
+                            console.log(mechanic);
+                            socket.emit('mechanic_update_location', mechanic);
+                        }, function (err) {
+                            console.warn(`ERROR(${err.code}): ${err.message}`);
+                        }, {
+                            enableHighAccuracy: true,
+                            timeout: 5000,
+                            maximumAge: 0
+                        });
+
+                    }, 90000);
+                }
             }
         });
 
@@ -172,12 +197,14 @@
         <div>
             <h4>Step 1: Create a new account</h4>
             <form id="signupForm" action="/signupMechanic" method="post">
-                Name:<br>
-                <input type="text" name="name"><br>
-                Latitude:<br>
-                <input type="text" name="latitude"><br>
-                Longitude:<br>
-                <input type="text" name="longitude"><br>
+                First Name:<br>
+                <input type="text" name="firstname"><br>
+                Last Name:<br>
+                <input type="text" name="lastname"><br>
+                Email Address:<br>
+                <input type="text" name="email"><br>
+                Password:<br>
+                <input type="text" name="password"><br>
                 Phone Number:<br>
                 <input type="text" name="phoneNumber"><br>
                 <input type="submit" value="Sign Up"/>
@@ -186,10 +213,10 @@
         <div>
             <h4>Step 2: Sign In</h4>
             <form id="loginForm" action="/loginMechanic" method="post">
-                Name:<br>
-                <input type="text" name="name"><br>
-                Phone Number:<br>
-                <input type="text" name="phoneNumber"><br>
+                Email Address:<br>
+                <input type="text" name="email"><br>
+                Password:<br>
+                <input type="text" name="password"><br>
                 <input type="submit" value="Login"/>
             </form>
         </div>
@@ -199,14 +226,8 @@
         <div>
             <h4>Step 4: Delete the account you created</h4>
             <form id="deleteForm" action="/deleteMechanic" method="post">
-                <div>
-                    <label>Name:</label>
-                    <input type="text" name="name"/><br/>
-                </div>
-                <div>
-                    <label>Phone Number:</label>
-                    <input type="text" name="phoneNumber"/><br/>
-                </div>
+                Email Address:<br>
+                <input type="text" name="email"><br>
                 <div>
                     <input type="submit" value="Delete"/>
                 </div>

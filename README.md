@@ -63,7 +63,7 @@ If the username and passowrd combination is not present in the database, the res
 
 Example response: ```{"user":{},"authInfo":{"message":"Incorrect username or password"}}```
 
-There is a test sign up web form at http://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:8443/test-front-end/customer.html you can use to try this API out.
+There is a test sign up web form at https://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:8443/test-front-end/customer.html you can use to try this API out.
 
 #### 4) signupMechanic
 
@@ -73,7 +73,7 @@ This works in a similar manner to ```/signup``` and has the same responses, but 
 
 Example request : ```curl --data "firstname=Omotola&lastname=Babasola&email=omotola.babasola%40yahoo.com&password=abcdefg&company=Carmonic" https://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:8443/signupMechanic```.
 
-There is a test sign up web form at http://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:8443/test-front-end/mechanic.html you can use to try this API out. 
+There is a test sign up web form at https://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:8443/test-front-end/mechanic.html you can use to try this API out. 
 
 #### 5) loginMechanic
 
@@ -83,4 +83,4 @@ This works in a similar manner to ```/signup``` and has the same responses, but 
 
 Example request: ```curl --data "email=omotola.babasola%40yahoo.com&password=abcdefgh" http://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:3000/login```.
 
-There is a test sign up web form at http://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:8443/test-front-end/mechanic.html you can use to try this API out. 
+There is a test sign up web form at https://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:8443/test-front-end/mechanic.html you can use to try this API out. 

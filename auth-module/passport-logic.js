@@ -137,6 +137,20 @@ passport.use('deleteaccount', new LocalStrategy(
     }
 ));
 
+passport.use('mechanicFeedback', new LocalStrategy(
+    LOCAL_STRATEGY_CONFIG,
+    function (req, username, password, done) {
+        pool.query('INSERT INTO "Feedback" ("customerId", "mechanicId", "feedback") VALUES ($1, $2, $3)', [req.body.customerId, req.body.mechanicId, req.body.feedback], (err, result) => {
+            if (err) {
+                logger.error("Problem inserting feedback from customer with id" + req.body.customerId + " into database");
+                logger.error(err);
+                return done(err);
+            }
+            return done(null, {}, {message: "Successfully received feedback"});
+        });
+    }
+));
+
 //ToDo: Auto-generate password for mechanics
 passport.use('signupMechanic', new LocalStrategy(
     LOCAL_STRATEGY_CONFIG_MECHANIC,

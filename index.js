@@ -141,6 +141,19 @@ app.post('/deleteMechanic',
     }
 );
 
+app.post('/mechanicFeedback',
+    passport.authenticate('mechanicFeedback', {
+        session: false
+    }),
+    function (req, res) {
+        response = {
+            user: req.user,
+            authInfo: req.authInfo
+        };
+        res.send(response);
+    }
+);
+
 server.listen(3000, function() {
     console.log('Carmonic listening on port 3000!');
 });

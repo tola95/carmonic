@@ -12,6 +12,8 @@ const secret = crypto.randomBytes(256);
 const jwt = require('./auth-module/jwt-logic')(secret);
 const authenticate = expressJwt({secret : secret});
 const logger = require('./logging-module/winston-logic.js');
+const request = require('request');
+const googleConfig = require('./googleConfig');
 
 const credentials = {
     key: fs.readFileSync('carmonic.key'),
@@ -127,6 +129,30 @@ app.get('/getMechanics',
 
         }
 });
+
+app.get('/getEstimatedDistance',
+    expressJwt({secret: secret}),
+    (req, res) => {
+        if (req.query) {
+            var fromLongitude = req.query.fromLongitude;
+            var fromLatitude = req.query.fromLatitude;
+
+            var toLongitude = req.query.toLongitude;
+            var toLatitude = req.query.toLatitude;
+
+            request("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial"
+                + "&origins=" + fromLatitude + "," + fromLongitude
+                + "&destinations=" + toLatitude + "," + toLongitude
+                + "&key=" + googleConfig.google_maps_key,
+                function (error, response, body) {
+                    console.log(body);
+                    body = JSON.parse(body);
+                    var time = body.rows[0].elements[0].duration.text;
+                    console.log(time);
+                    res.send(time);
+            });
+        }
+    });
 
 app.post('/deleteMechanic',
     passport.authenticate('deleteMechanic', {

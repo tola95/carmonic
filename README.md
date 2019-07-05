@@ -84,3 +84,27 @@ This works in a similar manner to ```/signup``` and has the same responses, but 
 Example request: ```curl --data "email=omotola.babasola%40yahoo.com&password=abcdefgh" http://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:3000/login```.
 
 There is a test sign up web form at https://ec2-35-177-219-101.eu-west-2.compute.amazonaws.com:8443/test-front-end/mechanic.html you can use to try this API out. 
+
+### Websocket Events
+
+For the mechanic:
+
+1. After login, every 60 seconds, emit ```mechanic_update_location(mechanic)```
+
+2. Always listen for ```job_request(mechanic, customer)``` unless you’re currently on a job
+
+3. If you receive ```job_request (mechanic, customer)``` show the popup where the mechanic can accept or reject the job
+
+4. On click Accept, emit ```mechanic_accept_job(mechanic, customer)```
+
+   1. Every 10 seconds, emit ```mechanic_update_location(mechanic, customer)```
+
+   2. Every 10 seconds, call ```/getEstimatedDistance``` API to get how many minutes away the mechanic is
+
+   3. When the mechanic is 1 min away, emit ```mechanic_start_job(mechanic, customer)``` *This one is up for debate. You can maybe show a button that the mechanic can use to start the job instead and then emit when the button is pressed
+
+   4. When the mechanic presses the conclude button, emit ```mechanic_conclude_job(mechanic, customer)```
+
+5. On click Reject, emit ```mechanic_reject_job(mechanic, customer)```
+
+See ```socket-io-logic.js``` for the technical details

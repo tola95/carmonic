@@ -147,7 +147,8 @@ app.get('/getEstimatedDistance',
                 function (error, response, body) {
                     console.log(body);
                     body = JSON.parse(body);
-                    var time = body.rows[0].elements[0].duration.text;
+                    var duration = body.rows[0].elements[0].duration;
+                    var time = duration != null ? duration.text : "unknown";
                     console.log(time);
                     res.send(time);
             });

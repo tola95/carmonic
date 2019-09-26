@@ -89,13 +89,15 @@ There is a test sign up web form at https://ec2-35-177-219-101.eu-west-2.compute
 
 For the mechanic:
 
-1. After login, every 60 seconds, emit ```mechanic_update_location(mechanic)```
+1. On "connect" event, emit ```mechanic_register(mechanic)```
 
-2. Always listen for ```job_request(mechanic, customer)``` unless you’re currently on a job
+2. After login, every 60 seconds, emit ```mechanic_update_location(mechanic)```
 
-3. If you receive ```job_request (mechanic, customer)``` show the popup where the mechanic can accept or reject the job
+3. Always listen for ```job_request(mechanic, customer)``` unless you’re currently on a job
 
-4. On click Accept, emit ```mechanic_accept_job(mechanic, customer)```
+4. If you receive ```job_request (mechanic, customer)``` show the popup where the mechanic can accept or reject the job
+
+5. On click Accept, emit ```mechanic_accept_job(mechanic, customer)```
 
    1. Every 10 seconds, emit ```mechanic_update_location(mechanic, customer)```
 
@@ -105,6 +107,6 @@ For the mechanic:
 
    4. When the mechanic presses the conclude button, emit ```mechanic_conclude_job(mechanic, customer)```
 
-5. On click Reject, emit ```mechanic_reject_job(mechanic, customer)```
+6. On click Reject, emit ```mechanic_reject_job(mechanic, customer)```
 
 See ```socket-io-logic.js``` for the technical details

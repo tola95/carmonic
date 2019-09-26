@@ -105,7 +105,7 @@ For the mechanic:
 
    3. When the mechanic is 1 min away, emit ```mechanic_start_job(mechanic, customer)``` *This one is up for debate. You can maybe show a button that the mechanic can use to start the job instead and then emit when the button is pressed
 
-   4. When the mechanic presses the conclude button, emit ```mechanic_conclude_job(mechanic, customer)```
+   4. When the mechanic presses the conclude button, transition to the billing page, where the mechanic can select what kind of job it was and select the amount of money the customer should pay, then emit ```mechanic_conclude_job(mechanic, customer, bill)```
 
 6. On click Reject, emit ```mechanic_reject_job(mechanic, customer)```
 

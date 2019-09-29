@@ -72,7 +72,7 @@ passport.use(stringConstants.SIGNUP, new LocalStrategy(
 
                             return done(null, {
                                 email: req.body.email
-                            }, {message: "Successfully signed up"});
+                            }, {message: "Successfully signed up", deliverToken: true});
                         }
                     });
                 }

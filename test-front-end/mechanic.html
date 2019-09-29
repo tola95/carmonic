@@ -16,6 +16,7 @@
 <script type="text/javascript">
     var socket = io.connect();
     var mechanicArrived = false;
+    var concludeJobFunc;
     socket.on('connect', function () {
         console.log('Mechanic has connected to the server!');
         $('#online').text("Online");
@@ -58,11 +59,33 @@
             var notdiv = document.createElement("p");
             notdiv.innerHTML = "Accepted job";
             $('#notifications').prepend(notdiv);
-            newdiv.appendChild(concludeButton);
-            $('#concludeJob').click(function () {
-                socket.emit('mechanic_conclude_job', mechanic, customer);
+//            newdiv.appendChild(concludeButton);
+//            $('#concludeJob').click(function () {
+//                socket.emit('mechanic_conclude_job', mechanic, customer);
+//                $('#jobContainer').remove();
+//            });
+            $('#billForm').show();
+            concludeJobFunc = function () {
+                var bill = document.getElementById("billOfForm").elements;
+                var billObj = {};
+
+                var i;
+                for (i = 0; i < bill.length; i++) {
+                    if (bill[i].checked) {
+                        billObj[bill[i].value] = true;
+                    }
+                    if (bill[i].id === "other") {
+                        var otherObj = {};
+                        otherObj[bill[i].value] = document.getElementById("price").value;
+                        billObj["other"] = otherObj;
+                    }
+                }
+
+                socket.emit('mechanic_conclude_job', mechanic, customer, billObj);
                 $('#jobContainer').remove();
-            });
+                $('#billForm').hide();
+            };
+
             newdiv.removeChild(acceptButton);
             var crd;
 
@@ -119,6 +142,7 @@
         };
         var distance = calculate_distance(customer.latitude, customer.longitude, mechanic.latitude, mechanic.longitude);
         console.log('distance: ' + distance );
+        //ToDo: use a better distance
         if (distance < 5) {
             socket.emit('mechanic_start_job', mechanic, customer);
             mechanicArrived = true;
@@ -127,6 +151,8 @@
     $(document).ready(function () {
 
         $('#jobContainer').hide();
+
+        $('#billForm').hide();
 
         $('#signupForm').ajaxForm({
             success: function (response) {
@@ -184,8 +210,6 @@
                 $('#notifications').prepend(newdiv);
             }
         });
-
-
     });
 </script>
 <div>
@@ -236,10 +260,21 @@
             </form>
         </div>
     </div>
-    <div style="margin-left: 58%;">
+    <div style="margin-left: 38%;">
         <p><b>Notifications</b></p>
         <div id="notifications">
+            <div id="billForm">
+                <p >Bill</p>
+                <form id="billOfForm">
+                    <input type="radio" name="changeTyre" value="changeTyre">Changed Tyre<br>
+                    <input type="radio" name="fixEngine" value="fixEngine">Fixed Engine<br>
+                    <input type="radio" name="changeWindshield" value="changeWindshield">Changed Windshield<br>
+                    Service: <input type="text" id="other">
+                    <br>Price: <input type="text" id="price">
 
+                    <br><input type="button" onclick="concludeJobFunc()" value="Conclude">
+                </form>
+            </div>
         </div>
     </div>
 </div>

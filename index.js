@@ -39,11 +39,27 @@ app.post('/signup',
         session: false
     }),
     function(req, res) {
-        response = {
-            user: req.user,
-            authInfo: req.authInfo
-        };
-        res.send(response);
+        if (req.authInfo.deliverToken) {
+            console.log("Here");
+            jwt.sign(req, function(err, req) {
+                if (err) {
+                    res.send(err);
+                    return;
+                }
+                delete req.authInfo.deliverToken;
+                response = {
+                    user: req.user,
+                    authInfo: req.authInfo
+                };
+                res.send(response);
+            });
+        } else {
+            response = {
+                user: req.user,
+                authInfo: req.authInfo
+            };
+            res.send(response);
+        }
     }
 );
 

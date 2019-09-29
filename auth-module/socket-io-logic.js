@@ -86,14 +86,14 @@ module.exports = function (server) {
             }
         });
 
-        socket.on('mechanic_conclude_job', function (mechanic, customer) {
+        socket.on('mechanic_conclude_job', function (mechanic, customer, bill) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
                 console.log('mechanic ' + mechanic.email + ' concluded customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 var connection = currentConnections[customer.id];
                 if (connection) {
-                    io.to(currentConnections[customer.id].socket.id).emit('job_conclude', mechanic);
+                    io.to(currentConnections[customer.id].socket.id).emit('job_conclude', mechanic, bill);
                 }
             }
         });

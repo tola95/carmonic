@@ -14,6 +14,7 @@ const authenticate = expressJwt({secret : secret});
 const logger = require('./logging-module/winston-logic.js');
 const request = require('request');
 const googleConfig = require('./googleConfig');
+const paystackConfig = require('./paystackConfig');
 
 const credentials = {
     key: fs.readFileSync('carmonic.key'),
@@ -23,6 +24,7 @@ const credentials = {
 const https = require('https');
 const httpsServer = https.createServer(credentials, app);
 const {io, currentConnections} = require("./auth-module/socket-io-logic")(httpsServer);
+var pool = require("./db-module/postgres-logic").pool;
 
 /*
  * HTTP ENDPOINTS
@@ -40,7 +42,11 @@ app.post('/signup',
     }),
     function(req, res) {
         if (req.authInfo.deliverToken) {
-            console.log("Here");
+            var key = paystackConfig.secret_key;
+            var email = req.user.email;
+            var reference = req.user.paymentReference;
+            var accessKey;
+
             jwt.sign(req, function(err, req) {
                 if (err) {
                     res.send(err);
@@ -52,6 +58,20 @@ app.post('/signup',
                     authInfo: req.authInfo
                 };
                 res.send(response);
+            });
+
+            //Register a key for the customer that can be used to charge them for future payments
+            request.get({
+                headers: {
+                    "Authorization": "Bearer " + key
+                },
+                url: "https://api.paystack.co/transaction/verify/" + reference,
+            }, function (error, response, body) {
+                body = JSON.parse(body);
+                if (!!body.data && !!body.data.authorization) {
+                    accessKey = body.data.authorization.authorization_code;
+                    postgresLogic.addPaymentCode(accessKey, email);
+                }
             });
         } else {
             response = {
@@ -168,6 +188,92 @@ app.get('/getEstimatedDistance',
                     console.log(time);
                     res.send(time);
             });
+        }
+    }
+);
+
+app.get('/charge',
+    expressJwt({secret: secret}),
+    (req, res) => {
+        if (req.query) {
+            var email = req.query.email;
+            var amount = req.query.amount;
+            var key = paystackConfig.secret_key;
+
+            postgresLogic.charge(email, function (user) {
+                if (user.paymentCode) {
+                    var accessKey = user.paymentCode;
+                    request.post({
+                        headers: {
+                            "Authorization": "Bearer " + key,
+                            "Content-Type": "application/json"
+                        },
+                        url: "https://api.paystack.co/transaction/charge_authorization",
+                        body: JSON.stringify({
+                            email: email,
+                            amount: amount,
+                            authorization_code: accessKey
+                        })
+                    }, function (error, response, body) {
+                        body = JSON.parse(body);
+                        console.log(body);
+                        if (!!body.data && !!body.data.status) {
+                            res.send({status: body.data.status})
+                        }
+                    });
+                } else {
+                    res.send({});
+                }
+
+            });
+
+            // pool.query('SELECT * FROM "Customers" WHERE "email"=$1', [req.query.email], (err, result) => {
+            //     if (err) {
+            //         // logger.error("Problem searching for customer " + req.body.email + " in database");
+            //         // logger.error(err);
+            //         console.log("4");
+            //
+            //     }
+            //
+            //     if (result.rows[0]) {
+            //         console.log("1");
+            //         var user = result.rows[0];
+            //         var accessKey = user.paymentCode;
+            //         // console.log(JSON.stringify({
+            //         //     headers: {
+            //         //         "Authorization": "Bearer " + key,
+            //         //         "Content-Type": "application/json"
+            //         //     }}));
+            //         // console.log(JSON.stringify({
+            //         //     email: email,
+            //         //     amout: amount,
+            //         //     authorization_code: accessKey
+            //         // }));
+            //         request.post({
+            //             headers: {
+            //                 "Authorization": "Bearer " + key,
+            //                 "Content-Type": "application/json"
+            //             },
+            //             url: "https://api.paystack.co/transaction/charge_authorization",
+            //             body: JSON.stringify({
+            //                 email: email,
+            //                 amount: amount,
+            //                 authorization_code: accessKey
+            //             })
+            //         }, function (error, response, body) {
+            //             console.log("3");
+            //             body = JSON.parse(body);
+            //             console.log(body);
+            //             if (!!body.data && !!body.data.status) {
+            //                 res.send({status: body.data.status})
+            //             }
+            //         });
+            //     } else {
+            //         console.log("2");
+            //         // logger.error("Attempted to charge customer " + req.body.email + " but does not exist");
+            //         res.send();
+            //     }
+            // });
         }
     });
 

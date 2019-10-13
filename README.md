@@ -93,9 +93,9 @@ For the mechanic:
 
 2. After login, every 60 seconds, emit ```mechanic_update_location(mechanic)```
 
-3. Always listen for ```job_request(mechanic, customer)``` unless you’re currently on a job
+3. Always listen for ```job_req(mechanic, customer)``` unless you’re currently on a job
 
-4. If you receive ```job_request (mechanic, customer)``` show the popup where the mechanic can accept or reject the job
+4. If you receive ```job_req (mechanic, customer)``` show the popup where the mechanic can accept or reject the job
 
 5. On click Accept, emit ```mechanic_accept_job(mechanic, customer)```
 

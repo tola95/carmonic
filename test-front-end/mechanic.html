@@ -25,7 +25,7 @@
         console.log('Mechanic has disconnected from the server!');
         $('#online').text("Offline");
     });
-    socket.on('job_request', function (mechanic, customer) {
+    socket.on('job_req', function (mechanic, customer) {
         console.log('Mechanic has received a job from ' + customer.id);
 
         var mechanicWait = 8000;

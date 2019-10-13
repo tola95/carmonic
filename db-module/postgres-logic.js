@@ -47,5 +47,39 @@ exports.getClosestMechanics = function (latitude, longitude, callback) {
     }
 };
 
+exports.addPaymentCode = function (accessKey, email) {
+    if (accessKey && email) {
+        pool.query('UPDATE "Customers" SET "paymentCode"=$1 WHERE "email"=$2', [accessKey, email], function (err, result) {
+            if (err) {
+                logger.error("Problem adding access key (payment code) for customer " + email + " to database");
+                logger.error(err);
+                console.log("Problem adding access key (payment code) " + accessKey + " for customer " + email + " to database")
+            } else {
+                pool.query('COMMIT');
+                logger.info("Access key (payment code) added for customer " + email);
+                console.log("Access key (payment code) added for customer " + email);
+            }
+        });
+    }
+
+};
+
+exports.charge = function (email, callback) {
+    pool.query('SELECT * FROM "Customers" WHERE "email"=$1', [email], (err, result) => {
+        if (err) {
+            logger.error("Problem searching for customer " + email + " in database");
+            logger.error(err);
+            return {};
+        }
+
+        if (result.rows[0]) {
+            callback(result.rows[0]);
+        } else {
+            logger.error("Attempted to charge customer " + req.body.email + " but does not exist");
+        }
+        return {};
+    });
+};
+
 exports.pool = pool;
 

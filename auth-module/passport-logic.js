@@ -51,7 +51,7 @@ passport.use(stringConstants.SIGNUP, new LocalStrategy(
                         logger.error(encryptionError);
                     } else {
 
-                    pool.query('INSERT INTO "Customers" ("firstname", "lastname", "email", "password") VALUES ($1, $2, $3, $4)', [req.body.firstname, req.body.lastname, req.body.email, hash], function (err, result) {
+                    pool.query('INSERT INTO "Customers" ("firstname", "lastname", "email", "phoneNumber", "password") VALUES ($1, $2, $3, $4, $5)', [req.body.firstname, req.body.lastname, req.body.email, req.body.phoneNumber, hash], function (err, result) {
                         if (err) {
                             logger.error("Problem adding customer " + req.body.email + " to database");
                             logger.error(err);
@@ -71,7 +71,8 @@ passport.use(stringConstants.SIGNUP, new LocalStrategy(
                             // });
 
                             return done(null, {
-                                email: req.body.email
+                                email: req.body.email,
+                                paymentReference: req.body.paymentReference
                             }, {message: "Successfully signed up", deliverToken: true});
                         }
                     });

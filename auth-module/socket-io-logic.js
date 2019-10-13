@@ -21,7 +21,6 @@ module.exports = function (server) {
         socket.on(stringConstants.SOCKET_MECHANIC_REGISTRATION_EVENT, function (data) {
             data = parseIfString(data);
             if (data) {
-                console.log('mechanic ' + data.email + ' registered');
                 currentConnections[data.id] = {mechanicUsername: data.id, socket: socket};
                 socket._username = data.id;
             }
@@ -45,7 +44,7 @@ module.exports = function (server) {
                 console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' requested mechanic ' + mechanic.email + ' job');
                 var connection = currentConnections[mechanic.id];
                 if (connection) {
-                    io.to(currentConnections[mechanic.id].socket.id).emit('job_request', mechanic, customer);
+                    io.to(currentConnections[mechanic.id].socket.id).emit('job_req', mechanic, customer);
                 }
             }
         });
@@ -114,7 +113,6 @@ module.exports = function (server) {
                     if (err) {
                         logger.error("Problem adding mechanic " + mechanic.email + " to database");
                         logger.error(err);
-                        return done(err);
                     } else {
                         pool.query('COMMIT');
                         logger.info("Mechanic " + mechanic.email + " updated location");

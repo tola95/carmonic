@@ -72,6 +72,9 @@ passport.use(stringConstants.SIGNUP, new LocalStrategy(
 
                             return done(null, {
                                 email: req.body.email,
+                                firstname: req.body.firstname,
+                                lastname: req.body.lastname,
+                                id: req.body.id,
                                 paymentReference: req.body.paymentReference
                             }, {message: "Successfully signed up", deliverToken: true});
                         }

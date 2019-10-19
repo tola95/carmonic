@@ -226,54 +226,6 @@ app.get('/charge',
                 }
 
             });
-
-            // pool.query('SELECT * FROM "Customers" WHERE "email"=$1', [req.query.email], (err, result) => {
-            //     if (err) {
-            //         // logger.error("Problem searching for customer " + req.body.email + " in database");
-            //         // logger.error(err);
-            //         console.log("4");
-            //
-            //     }
-            //
-            //     if (result.rows[0]) {
-            //         console.log("1");
-            //         var user = result.rows[0];
-            //         var accessKey = user.paymentCode;
-            //         // console.log(JSON.stringify({
-            //         //     headers: {
-            //         //         "Authorization": "Bearer " + key,
-            //         //         "Content-Type": "application/json"
-            //         //     }}));
-            //         // console.log(JSON.stringify({
-            //         //     email: email,
-            //         //     amout: amount,
-            //         //     authorization_code: accessKey
-            //         // }));
-            //         request.post({
-            //             headers: {
-            //                 "Authorization": "Bearer " + key,
-            //                 "Content-Type": "application/json"
-            //             },
-            //             url: "https://api.paystack.co/transaction/charge_authorization",
-            //             body: JSON.stringify({
-            //                 email: email,
-            //                 amount: amount,
-            //                 authorization_code: accessKey
-            //             })
-            //         }, function (error, response, body) {
-            //             console.log("3");
-            //             body = JSON.parse(body);
-            //             console.log(body);
-            //             if (!!body.data && !!body.data.status) {
-            //                 res.send({status: body.data.status})
-            //             }
-            //         });
-            //     } else {
-            //         console.log("2");
-            //         // logger.error("Attempted to charge customer " + req.body.email + " but does not exist");
-            //         res.send();
-            //     }
-            // });
         }
     });
 

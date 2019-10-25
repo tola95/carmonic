@@ -56,7 +56,7 @@ module.exports = function (server) {
                 console.log('mechanic ' + mechanic.email + ' accepted customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 var connection = currentConnections[customer.id];
                 if (connection) {
-                    io.to(currentConnections[customer.id].socket.id).emit('job_accept', mechanic);
+                    io.to(currentConnections[customer.id].socket.id).emit('job_acc', mechanic);
                 }
             }
         });
@@ -92,7 +92,7 @@ module.exports = function (server) {
                 console.log('mechanic ' + mechanic.email + ' concluded customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 var connection = currentConnections[customer.id];
                 if (connection) {
-                    io.to(currentConnections[customer.id].socket.id).emit('job_conclude', mechanic, bill);
+                    io.to(currentConnections[customer.id].socket.id).emit('job_con', mechanic, bill);
                 }
             }
         });

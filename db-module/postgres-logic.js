@@ -81,5 +81,18 @@ exports.charge = function (email, callback) {
     });
 };
 
+exports.addFeedback = function (mechanicId, customerId, compliment, feedback, starRating, bill, callback) {
+    const date = new Date().getTime();
+    pool.query('INSERT INTO "Feedback" ("customerId", "mechanicId", "feedback", "compliment", "starRating", "date", "bill") VALUES ($1, $2, $3, $4, $5, $6, $7)', [customerId, mechanicId, feedback, compliment, starRating, date, bill], (err, result) => {
+        if (err) {
+            logger.error("Problem inserting feedback from customer with id " + customerId + " into database");
+            logger.error(err);
+            callback({message: "error"})
+        } else {
+            callback({message: "success"});
+        }
+    });
+};
+
 exports.pool = pool;
 

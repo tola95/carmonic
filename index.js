@@ -181,7 +181,6 @@ app.get('/getEstimatedDistance',
                 + "&destinations=" + toLatitude + "," + toLongitude
                 + "&key=" + googleConfig.google_maps_key,
                 function (error, response, body) {
-                    console.log(body);
                     body = JSON.parse(body);
                     var duration = body.rows[0].elements[0].duration;
                     var time = duration != null ? duration.text : "unknown";
@@ -242,16 +241,19 @@ app.post('/deleteMechanic',
     }
 );
 
+//ToDo: Store bill associated with this job as base 64 string
 app.post('/mechanicFeedback',
-    passport.authenticate('mechanicFeedback', {
-        session: false
-    }),
     function (req, res) {
-        response = {
-            user: req.user,
-            authInfo: req.authInfo
-        };
-        res.send(response);
+        postgresLogic.addFeedback(
+            req.body.mechanicId,
+            req.body.customerId,
+            req.body.compliment,
+            req.body.feedback,
+            req.body.starRating,
+            null,
+            (result) => {
+            res.send(result);
+        });
     }
 );
 

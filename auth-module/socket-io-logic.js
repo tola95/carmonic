@@ -19,10 +19,13 @@ module.exports = function (server) {
         //On launching the front end mechanic app, the mechanic sends this event, registering his socket in the current connections
         //Note that the key in the currentConnections is the username of the mechanic, so we can look up active mechanics via their username
         socket.on(stringConstants.SOCKET_MECHANIC_REGISTRATION_EVENT, function (data) {
+            console.log(data);
+
             data = parseIfString(data);
+            var id = "m_" + data.id;
             if (data) {
-                currentConnections[data.id] = {mechanicUsername: data.id, socket: socket};
-                socket._username = data.id;
+                currentConnections[id] = {mechanicUsername: id, socket: socket, mechanic: data};
+                socket._username = id;
             }
         });
 
@@ -30,10 +33,11 @@ module.exports = function (server) {
         //Note that the key in the currentConnections is the username of the customer, so we can look up active customers via their username
         socket.on(stringConstants.SOCKET_CUSTOMER_REGISTRATION_EVENT, function (data) {
             data = parseIfString(data);
+            var id = "c_" + data.id;
             if (data) {
                 console.log('customer ' + data.firstname + ' ' + data.lastname + ' registered');
-                currentConnections[data.id] = {customerUsername : data.id, socket : socket};
-                socket._username = data.id;
+                currentConnections[id] = {customerUsername : id, socket : socket, customer: data};
+                socket._username = id;
             }
         });
 
@@ -42,9 +46,9 @@ module.exports = function (server) {
             customer = parseIfString(customer);
             if (mechanic) {
                 console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' requested mechanic ' + mechanic.email + ' job');
-                var connection = currentConnections[mechanic.id];
+                var connection = currentConnections["m_" + mechanic.id];
                 if (connection) {
-                    io.to(currentConnections[mechanic.id].socket.id).emit('job_req', mechanic, customer);
+                    io.to(currentConnections["m_" + mechanic.id].socket.id).emit('job_req', mechanic, customer);
                 }
             }
         });
@@ -54,9 +58,9 @@ module.exports = function (server) {
             customer = parseIfString(customer);
             if (mechanic && customer) {
                 console.log('mechanic ' + mechanic.email + ' accepted customer ' + customer.firstname + ' ' + customer.lastname + ' job');
-                var connection = currentConnections[customer.id];
+                var connection = currentConnections["c_" + customer.id];
                 if (connection) {
-                    io.to(currentConnections[customer.id].socket.id).emit('job_acc', mechanic);
+                    io.to(currentConnections["c_" + customer.id].socket.id).emit('job_acc', mechanic);
                 }
             }
         });
@@ -66,9 +70,9 @@ module.exports = function (server) {
             customer = parseIfString(customer);
             if (mechanic && customer) {
                 console.log('mechanic ' + mechanic.email + ' rejected customer ' + customer.firstname + ' ' + customer.lastname + ' job');
-                var connection = currentConnections[customer.id];
+                var connection = currentConnections["c_" + customer.id];
                 if (connection) {
-                    io.to(currentConnections[customer.id].socket.id).emit('job_reject', mechanic);
+                    io.to(currentConnections["c_" + customer.id].socket.id).emit('job_reject', mechanic);
                 }
             }
         });
@@ -78,9 +82,9 @@ module.exports = function (server) {
             customer = parseIfString(customer);
             if (mechanic && customer) {
                 console.log('mechanic ' + mechanic.email + ' started customer ' + customer.firstname + ' ' + customer.lastname + ' job');
-                var connection = currentConnections[customer.id];
+                var connection = currentConnections["c_" + customer.id];
                 if (connection) {
-                    io.to(currentConnections[customer.id].socket.id).emit('job_start', mechanic);
+                    io.to(currentConnections["c_" + customer.id].socket.id).emit('job_start', mechanic);
                 }
             }
         });
@@ -90,9 +94,9 @@ module.exports = function (server) {
             customer = parseIfString(customer);
             if (mechanic && customer) {
                 console.log('mechanic ' + mechanic.email + ' concluded customer ' + customer.firstname + ' ' + customer.lastname + ' job');
-                var connection = currentConnections[customer.id];
+                var connection = currentConnections["c_" + customer.id];
                 if (connection) {
-                    io.to(currentConnections[customer.id].socket.id).emit('job_con', mechanic, bill);
+                    io.to(currentConnections["c_" + customer.id].socket.id).emit('job_con', mechanic, bill);
                 }
             }
         });
@@ -102,22 +106,17 @@ module.exports = function (server) {
             customer = parseIfString(customer);
             if (mechanic && customer) {
                 console.log('mechanic ' + mechanic.email + ' updated current location to lat: ' + mechanic.latitude + ' and long: ' + mechanic.longitude);
-                var connection = currentConnections[customer.id];
-                if (connection) {
-                    io.to(currentConnections[customer.id].socket.id).emit('update_location', mechanic);
+                if (currentConnections["c_" + customer.id]) {
+                    io.to(currentConnections["c_" + customer.id].socket.id).emit('update_location', mechanic);
                 }
             } else if (mechanic) {
                 //In this case, the mechanic is not currently on a job. We just update his location in the DB
                 console.log('mechanic ' + mechanic.email + ' updated current location to lat: ' + mechanic.latitude + ' and long: ' + mechanic.longitude);
-                pool.query('UPDATE "TestMechanics" SET "latitude"=$1, "longitude"=$2 WHERE "email"=$3 ', [mechanic.latitude, mechanic.longitude, mechanic.email], function (err, result) {
-                    if (err) {
-                        logger.error("Problem adding mechanic " + mechanic.email + " to database");
-                        logger.error(err);
-                    } else {
-                        pool.query('COMMIT');
-                        logger.info("Mechanic " + mechanic.email + " updated location");
-                    }
-                });
+                if (currentConnections["m_" + mechanic.id]) {
+                    currentConnections["m_" + mechanic.id].mechanic.latitude = mechanic.latitude;
+                    currentConnections["m_" + mechanic.id].mechanic.longitude = mechanic.longitude;
+                    logger.info("Mechanic " + mechanic.email + " updated location");
+                }
             }
         });
 
@@ -126,9 +125,9 @@ module.exports = function (server) {
             customer = parseIfString(customer);
             if (mechanic && customer) {
                 console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' updated current location to lat: ' + customer.latitude + ' and long: ' + customer.longitude);
-                var connection = currentConnections[mechanic.id];
+                var connection = currentConnections["m_" + mechanic.id];
                 if (connection) {
-                    io.to(currentConnections[mechanic.id].socket.id).emit('update_location', mechanic, customer);
+                    io.to(currentConnections["m_" + mechanic.id].socket.id).emit('update_location', mechanic, customer);
                 }
             }
         });
@@ -143,7 +142,32 @@ module.exports = function (server) {
         });
     });
 
-    return {io: io, currentConnections: currentConnections};
+    function getClosestMechanics(lat, lng) {
+        return Object.keys(currentConnections)
+            .map(key => {
+                var connection = currentConnections[key];
+                if (connection && !!connection.mechanic) {
+                    return connection.mechanic;
+                }
+            })
+            .filter(mechanic => {
+                return !!mechanic && !!mechanic.latitude && !!mechanic.longitude
+            })
+            .sort(function(x, y) {
+                console.log(x.latitude);
+                console.log(y.latitude);
+                if (dist(lat, lng, x.latitude, x.longitude) < dist(lat, lng, y.latitude, y.longitude)) {
+                    return 1;
+                }
+                if (dist(lat, lng, x.latitude, x.longitude) > dist(lat, lng, y.latitude, y.longitude)) {
+                    return -1;
+                }
+                return 0;
+            })
+            .slice(0, 5);
+    }
+
+    return {io: io, currentConnections: currentConnections, getClosestMechanics: getClosestMechanics};
 };
 
 function parseIfString(data) {
@@ -151,4 +175,8 @@ function parseIfString(data) {
         return JSON.parse(data);
     }
     return data;
+}
+
+function dist(x1, x2, y1, y2) {
+    return Math.hypot(x2-y2, x1-y1);
 }

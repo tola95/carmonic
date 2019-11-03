@@ -23,7 +23,7 @@ const credentials = {
 
 const https = require('https');
 const httpsServer = https.createServer(credentials, app);
-const {io, currentConnections} = require("./auth-module/socket-io-logic")(httpsServer);
+const {io, getClosestMechanics} = require("./auth-module/socket-io-logic")(httpsServer);
 var pool = require("./db-module/postgres-logic").pool;
 
 /*
@@ -153,16 +153,13 @@ app.post('/loginMechanic',
 );
 
 app.get('/getMechanics',
-    expressJwt({secret: secret}),
+    //expressJwt({secret: secret}),
     (req, res) => {
         if (req.query) {
             var longitude = req.query.longitude;
             var latitude = req.query.latitude;
 
-            postgresLogic.getClosestMechanics(latitude, longitude, function (result) {
-                res.send(result.rows);
-            });
-
+            res.send(getClosestMechanics(latitude, longitude));
         }
 });
 

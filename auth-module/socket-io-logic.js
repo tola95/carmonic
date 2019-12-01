@@ -45,10 +45,22 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic) {
-                console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' requested mechanic ' + mechanic.email + ' job');
                 var connection = currentConnections["m_" + mechanic.id];
                 if (connection) {
                     io.to(currentConnections["m_" + mechanic.id].socket.id).emit('job_req', mechanic, customer);
+                    console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' requested mechanic ' + mechanic.email + ' job');
+                }
+            }
+        });
+
+        socket.on('customer_cancel_job', function (mechanic, customer) {
+            mechanic = parseIfString(mechanic);
+            customer = parseIfString(customer);
+            if (mechanic) {
+                var connection = currentConnections["m_" + mechanic.id];
+                if (connection) {
+                    io.to(currentConnections["m_" + mechanic.id].socket.id).emit('job_canc', mechanic, customer);
+                    console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' cancelled mechanic ' + mechanic.email + ' job');
                 }
             }
         });
@@ -57,10 +69,10 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
-                console.log('mechanic ' + mechanic.email + ' accepted customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 var connection = currentConnections["c_" + customer.id];
                 if (connection) {
                     io.to(currentConnections["c_" + customer.id].socket.id).emit('job_acc', mechanic);
+                    console.log('mechanic ' + mechanic.email + ' accepted customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 }
             }
         });
@@ -69,10 +81,10 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
-                console.log('mechanic ' + mechanic.email + ' rejected customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 var connection = currentConnections["c_" + customer.id];
                 if (connection) {
                     io.to(currentConnections["c_" + customer.id].socket.id).emit('job_reject', mechanic);
+                    console.log('mechanic ' + mechanic.email + ' rejected customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 }
             }
         });
@@ -93,10 +105,10 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
-                console.log('mechanic ' + mechanic.email + ' concluded customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 var connection = currentConnections["c_" + customer.id];
                 if (connection) {
                     io.to(currentConnections["c_" + customer.id].socket.id).emit('job_con', mechanic, bill);
+                    console.log('mechanic ' + mechanic.email + ' concluded customer ' + customer.firstname + ' ' + customer.lastname + ' job');
                 }
             }
         });
@@ -105,17 +117,17 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
-                console.log('mechanic ' + mechanic.email + ' updated current location to lat: ' + mechanic.latitude + ' and long: ' + mechanic.longitude);
                 if (currentConnections["c_" + customer.id]) {
                     io.to(currentConnections["c_" + customer.id].socket.id).emit('update_location', mechanic);
+                    console.log('mechanic ' + mechanic.email + ' updated current location to lat: ' + mechanic.latitude + ' and long: ' + mechanic.longitude);
                 }
             } else if (mechanic) {
                 //In this case, the mechanic is not currently on a job. We just update his location in the DB
-                console.log('mechanic ' + mechanic.email + ' updated current location to lat: ' + mechanic.latitude + ' and long: ' + mechanic.longitude);
                 if (currentConnections["m_" + mechanic.id]) {
                     currentConnections["m_" + mechanic.id].mechanic.latitude = mechanic.latitude;
                     currentConnections["m_" + mechanic.id].mechanic.longitude = mechanic.longitude;
                     logger.info("Mechanic " + mechanic.email + " updated location");
+                    console.log('mechanic ' + mechanic.email + ' updated current location to lat: ' + mechanic.latitude + ' and long: ' + mechanic.longitude);
                 }
             }
         });
@@ -124,16 +136,16 @@ module.exports = function (server) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic && customer) {
-                console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' updated current location to lat: ' + customer.latitude + ' and long: ' + customer.longitude);
                 var connection = currentConnections["m_" + mechanic.id];
                 if (connection) {
                     io.to(currentConnections["m_" + mechanic.id].socket.id).emit('update_location', mechanic, customer);
+                    console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' updated current location to lat: ' + customer.latitude + ' and long: ' + customer.longitude);
                 }
             }
         });
 
         //On closing the app, the reference to the corresponding party's socket connection is terminated
-        socket.on(stringConstants.SOCKET_DISCONNECT_EVENT, function(){
+        socket.on(stringConstants.SOCKET_DISCONNECT_EVENT, function() {
             if (socket._username) {
                 delete currentConnections[socket._username];
                 console.log('user disconnected');

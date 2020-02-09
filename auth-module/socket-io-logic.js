@@ -14,7 +14,7 @@ module.exports = function (server) {
 
     //ToDo: If mechanic and customer have the same ID there will be a conflict in concurrent connections, sort this
     io.on('connection', function (socket) {
-        console.log('a user connected');
+        //console.log('a user connected');
 
         //On launching the front end mechanic app, the mechanic sends this event, registering his socket in the current connections
         //Note that the key in the currentConnections is the username of the mechanic, so we can look up active mechanics via their username
@@ -24,6 +24,7 @@ module.exports = function (server) {
             data = parseIfString(data);
             var id = "m_" + data.id;
             if (data) {
+                console.log('mechanic ' + data.firstname + ' ' + data.lastname + ' registered');
                 currentConnections[id] = {mechanicUsername: id, socket: socket, mechanic: data};
                 socket._username = id;
             }
@@ -41,13 +42,13 @@ module.exports = function (server) {
             }
         });
 
-        socket.on('customer_request_job', function (mechanic, customer) {
+        socket.on('customer_request_job', function (mechanic, customer, metadata) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
             if (mechanic) {
                 var connection = currentConnections["m_" + mechanic.id];
                 if (connection) {
-                    io.to(currentConnections["m_" + mechanic.id].socket.id).emit('job_req', mechanic, customer);
+                    io.to(currentConnections["m_" + mechanic.id].socket.id).emit('job_req', mechanic, customer, metadata);
                     console.log('customer ' + customer.firstname + ' ' + customer.lastname + ' requested mechanic ' + mechanic.email + ' job');
                 }
             }

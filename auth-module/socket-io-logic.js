@@ -34,8 +34,8 @@ module.exports = function (server) {
         //Note that the key in the currentConnections is the username of the customer, so we can look up active customers via their username
         socket.on(stringConstants.SOCKET_CUSTOMER_REGISTRATION_EVENT, function (data) {
             data = parseIfString(data);
-            var id = "c_" + data.id;
             if (data) {
+                var id = "c_" + data.id;
                 console.log('customer ' + data.firstname + ' ' + data.lastname + ' registered');
                 currentConnections[id] = {customerUsername : id, socket : socket, customer: data};
                 socket._username = id;
@@ -45,6 +45,7 @@ module.exports = function (server) {
         socket.on('customer_request_job', function (mechanic, customer, metadata) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
+            metadata = parseIfString(metadata);
             if (mechanic) {
                 var connection = currentConnections["m_" + mechanic.id];
                 if (connection) {
@@ -105,6 +106,7 @@ module.exports = function (server) {
         socket.on('mechanic_conclude_job', function (mechanic, customer, bill) {
             mechanic = parseIfString(mechanic);
             customer = parseIfString(customer);
+            bill = parseIfString(bill);
             if (mechanic && customer) {
                 var connection = currentConnections["c_" + customer.id];
                 if (connection) {

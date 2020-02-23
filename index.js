@@ -196,7 +196,7 @@ app.get('/charge',
             var amount = req.query.amount;
             var key = paystackConfig.secret_key;
 
-            postgresLogic.charge(email, function (user) {
+            postgresLogic.getCustomer(email, function (user) {
                 if (user.paymentCode) {
                     var accessKey = user.paymentCode;
                     request.post({
@@ -251,6 +251,27 @@ app.post('/mechanicFeedback',
             (result) => {
             res.send(result);
         });
+    }
+);
+
+app.post('/history',
+    function (req, res) {
+        if (req.body.customerId) {
+            postgresLogic.getFeedbackForCustomer(
+                req.body.customerId,
+                (result) => {
+                    res.send(result);
+                });
+        } else if (req.body.mechanicId) {
+            postgresLogic.getFeedbackForMechanic(
+                req.body.mechanicId,
+                (result) => {
+                    res.send(result);
+                });
+        } else {
+            res.send({message: "error"});
+        }
+
     }
 );
 

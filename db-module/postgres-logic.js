@@ -64,7 +64,7 @@ exports.addPaymentCode = function (accessKey, email) {
 
 };
 
-exports.charge = function (email, callback) {
+exports.getCustomer = function (email, callback) {
     pool.query('SELECT * FROM "Customers" WHERE "email"=$1', [email], (err, result) => {
         if (err) {
             logger.error("Problem searching for customer " + email + " in database");
@@ -90,6 +90,30 @@ exports.addFeedback = function (mechanicId, customerId, compliment, feedback, st
             callback({message: "error"})
         } else {
             callback({message: "success"});
+        }
+    });
+};
+
+exports.getFeedbackForCustomer = function (customerId, callback) {
+    pool.query('SELECT * FROM "Feedback" WHERE "customerId"=$1 ORDER BY date DESC', [customerId], (err, result) => {
+        if (err) {
+            logger.error("Problem getting feedback of customer with id " + customerId + " from database");
+            logger.error(err);
+            callback({message: "error"})
+        } else {
+            callback({message: "success", result: result});
+        }
+    });
+};
+
+exports.getFeedbackForMechanic = function (mechanicId, callback) {
+    pool.query('SELECT * FROM "Feedback" WHERE "mechanicId"=$1 ORDER BY date DESC', [mechanicId], (err, result) => {
+        if (err) {
+            logger.error("Problem getting feedback of mechanic with id " + mechanicId + " from database");
+            logger.error(err);
+            callback({message: "error"})
+        } else {
+            callback({message: "success", result: result});
         }
     });
 };

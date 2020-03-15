@@ -1,0 +1,23 @@
+{
+  "version": "20200223",
+  "bill": {
+    "customizable": true,
+    "services": [
+      {
+        "id": "changedTyre",
+        "value": "Tyre Change",
+        "price": "5000"
+      },
+      {
+        "id": "fixEngine",
+        "value": "Engine Fix",
+        "price": "3000"
+      },
+      {
+        "id": "refuel",
+        "value": "Refuel",
+        "price": "2000"
+      }
+    ]
+  }
+}

@@ -101,7 +101,7 @@ exports.getFeedbackForCustomer = function (customerId, callback) {
             logger.error(err);
             callback({message: "error"})
         } else {
-            callback({message: "success", result: result});
+            callback({message: "success", result: result.rows});
         }
     });
 };
@@ -113,7 +113,7 @@ exports.getFeedbackForMechanic = function (mechanicId, callback) {
             logger.error(err);
             callback({message: "error"})
         } else {
-            callback({message: "success", result: result});
+            callback({message: "success", result: result.rows});
         }
     });
 };

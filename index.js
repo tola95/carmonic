@@ -196,8 +196,9 @@ app.get('/charge',
             var amount = req.query.amount;
             var key = paystackConfig.secret_key;
 
-            postgresLogic.getCustomer(email, function (user) {
-                if (user.paymentCode) {
+            postgresLogic.getCustomer(email, function (result) {
+                user = result.response;
+                if (user && user.paymentCode) {
                     var accessKey = user.paymentCode;
                     request.post({
                         headers: {
@@ -214,11 +215,11 @@ app.get('/charge',
                         body = JSON.parse(body);
                         console.log(body);
                         if (!!body.data && !!body.data.status) {
-                            res.send({status: body.data.status})
+                            res.send({message: "success", status: body.data.status})
                         }
                     });
                 } else {
-                    res.send({});
+                    res.send({message: "error"});
                 }
 
             });

@@ -31,6 +31,26 @@ pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
     }
 });
 
+const getMechanicDetails = async function (mechanicId) {
+    if (!!mechanicId) {
+        const result = await pool.query('SELECT * FROM "TestMechanics" WHERE "id"=$1', [mechanicId]);
+        const mechanic = !!result && !!result.rows ? result.rows[0] : null;
+        if (mechanic) {
+            return Promise.resolve({
+                firstname: mechanic.firstname,
+                phone_number: mechanic.phone_number,
+                email: mechanic.email,
+                lastname: mechanic.lastname,
+                company: mechanic.company
+            });
+        } else {
+            logger.error("Problem searching for mechanic " + mechanicId + " in database");
+            logger.error(err);
+            return Promise.resolve({});
+        }
+    }
+};
+
 exports.getClosestMechanics = function (latitude, longitude, callback) {
     //ToDo: Validate longitude and latitude are legitimate values
     if (longitude && latitude) {
@@ -69,15 +89,15 @@ exports.getCustomer = function (email, callback) {
         if (err) {
             logger.error("Problem searching for customer " + email + " in database");
             logger.error(err);
-            return {};
+            callback({message: "error"});
         }
 
         if (result.rows[0]) {
-            callback(result.rows[0]);
+            return callback({message: "success", result: result.rows[0]});
         } else {
             logger.error("Attempted to charge customer " + req.body.email + " but does not exist");
+            callback({message: "error"})
         }
-        return {};
     });
 };
 
@@ -87,7 +107,7 @@ exports.addFeedback = function (mechanicId, customerId, compliment, feedback, st
         if (err) {
             logger.error("Problem inserting feedback from customer with id " + customerId + " into database");
             logger.error(err);
-            callback({message: "error"})
+            callback({message: "error"});
         } else {
             callback({message: "success"});
         }
@@ -99,9 +119,23 @@ exports.getFeedbackForCustomer = function (customerId, callback) {
         if (err) {
             logger.error("Problem getting feedback of customer with id " + customerId + " from database");
             logger.error(err);
-            callback({message: "error"})
+            callback({message: "error"});
         } else {
-            callback({message: "success", result: result.rows});
+            const rows = result.rows;
+            const rowPromises = rows.map(async (row) => {
+                const id = row.mechanicId;
+                return {
+                    ...row,
+                    mechanic: await getMechanicDetails(id),
+                    mechanicId: undefined
+                };
+            });
+
+            Promise.all(rowPromises).then((resolvedRows) => {
+                callback({message: "success", result: resolvedRows});
+            }).catch((error) => {
+                callback({message: "error"});
+            });
         }
     });
 };

@@ -12,7 +12,6 @@ module.exports = function (server) {
     //Object storing the current socket connections to the server
     var currentConnections = {};
 
-    //ToDo: If mechanic and customer have the same ID there will be a conflict in concurrent connections, sort this
     io.on('connection', function (socket) {
         //console.log('a user connected');
 

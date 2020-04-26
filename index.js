@@ -15,6 +15,7 @@ const logger = require('./logging-module/winston-logic.js');
 const request = require('request');
 const googleConfig = require('./googleConfig');
 const paystackConfig = require('./paystackConfig');
+const { addCustomer, addMechanic, getAvaliableMechanic } = require('./networks/JobCoordinator');
 
 const credentials = {
     key: fs.readFileSync('carmonic.key'),
@@ -273,6 +274,49 @@ app.post('/history',
             res.send({message: "error"});
         }
 
+    }
+);
+
+
+app.get('/getSingleMechanic',
+    function(req, res) {
+        if (req.query) {
+            var customerId = req.query.customerId;
+            var longitude = req.query.longitude;
+            var latitude = req.query.latitude;
+            var fcmToken = req.query.fcmToken;
+
+            getAvaliableMechanic(customerId, latitude, longitude);
+        }
+        res.send({});
+    }
+);
+
+app.get('/mechStatusChange',
+    function(req, res) {
+        if (req.query) {
+            var mechanicId = req.query.mechanicId;
+            var longitude = req.query.longitude;
+            var latitude = req.query.latitude;
+            var fcmToken = req.query.fcmToken;
+
+            addMechanic(mechanicId, longitude, latitude, fcmToken);
+        }
+        res.send({});
+    }
+);
+
+app.get('/custStatusChange',
+    function(req, res) {
+        if (req.query) {
+            var customerId = req.query.customerId;
+            var longitude = req.query.longitude;
+            var latitude = req.query.latitude;
+            var fcmToken = req.query.fcmToken;
+
+            addCustomer(customerId, longitude, latitude, fcmToken);
+        }
+        res.send({});
     }
 );
 

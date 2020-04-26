@@ -51,6 +51,27 @@ const getMechanicDetails = async function (mechanicId) {
     }
 };
 
+const getCustomerDetails = async function (customerId) {
+    if (!!customerId) {
+        const result = await pool.query('SELECT * FROM "Customers" WHERE "id"=$1', [customerId]);
+        const customer = !!result && !!result.rows ? result.rows[0] : null;
+        if (customer) {
+            return Promise.resolve({
+                firstname: customer.firstname,
+                phone_number: customer.phone_number,
+                email: customer.email,
+                lastname: customer.lastname
+            });
+        } else {
+            logger.error("Problem searching for customer " + customerId + " in database");
+            logger.error(err);
+            return Promise.resolve({});
+        }
+    }
+};
+
+exports.getCustomerDetails = getCustomerDetails;
+
 exports.getClosestMechanics = function (latitude, longitude, callback) {
     //ToDo: Validate longitude and latitude are legitimate values
     if (longitude && latitude) {

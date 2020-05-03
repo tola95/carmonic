@@ -33,43 +33,54 @@ pool.query(config.DISTANCE_FUNCTION, [], (err, result) => {
 
 const getMechanicDetails = async function (mechanicId) {
     if (!!mechanicId) {
-        const result = await pool.query('SELECT * FROM "TestMechanics" WHERE "id"=$1', [mechanicId]);
-        const mechanic = !!result && !!result.rows ? result.rows[0] : null;
-        if (mechanic) {
-            return Promise.resolve({
-                firstname: mechanic.firstname,
-                phone_number: mechanic.phone_number,
-                email: mechanic.email,
-                lastname: mechanic.lastname,
-                company: mechanic.company
-            });
-        } else {
+        try {
+            const result = await pool.query('SELECT * FROM "TestMechanics" WHERE "id"=$1', [mechanicId]);
+            const mechanic = !!result && !!result.rows ? result.rows[0] : null;
+            if (mechanic) {
+                return Promise.resolve({
+                    id: mechanic.id,
+                    firstname: mechanic.firstname,
+                    phone_number: mechanic.phone_number,
+                    email: mechanic.email,
+                    lastname: mechanic.lastname,
+                    company: mechanic.company
+                });
+            }
+        } catch (error) {
             logger.error("Problem searching for mechanic " + mechanicId + " in database");
-            logger.error(err);
-            return Promise.resolve({});
+            logger.error(error);
+            return Promise.reject(error);
         }
+    } else {
+        return Promise.reject({ error: "mechanic id not specified" });
     }
 };
 
 const getCustomerDetails = async function (customerId) {
     if (!!customerId) {
-        const result = await pool.query('SELECT * FROM "Customers" WHERE "id"=$1', [customerId]);
-        const customer = !!result && !!result.rows ? result.rows[0] : null;
-        if (customer) {
-            return Promise.resolve({
-                firstname: customer.firstname,
-                phone_number: customer.phone_number,
-                email: customer.email,
-                lastname: customer.lastname
-            });
-        } else {
+        try {
+            const result = await pool.query('SELECT * FROM "Customers" WHERE "id"=$1', [customerId]);
+            const customer = !!result && !!result.rows ? result.rows[0] : null;
+            if (customer) {
+                return Promise.resolve({
+                    id: customer.id,
+                    firstname: customer.firstname,
+                    phone_number: customer.phone_number,
+                    email: customer.email,
+                    lastname: customer.lastname
+                });
+            }
+        } catch (error) {
             logger.error("Problem searching for customer " + customerId + " in database");
-            logger.error(err);
-            return Promise.resolve({});
+            logger.error(error);
+            return Promise.resolve(error);
         }
+    } else {
+        return Promise.reject({ error: "customer id not specified" });
     }
 };
 
+exports.getMechanicDetails = getMechanicDetails;
 exports.getCustomerDetails = getCustomerDetails;
 
 exports.getClosestMechanics = function (latitude, longitude, callback) {

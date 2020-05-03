@@ -15,7 +15,7 @@ const logger = require('./logging-module/winston-logic.js');
 const request = require('request');
 const googleConfig = require('./googleConfig');
 const paystackConfig = require('./paystackConfig');
-const { addCustomer, addMechanic, getAvaliableMechanic } = require('./networks/JobCoordinator');
+const { addCustomer, addMechanic, mechanicAccept, setupJob } = require('./networks/JobCoordinator');
 
 const credentials = {
     key: fs.readFileSync('carmonic.key'),
@@ -277,8 +277,10 @@ app.post('/history',
     }
 );
 
+// JOB-RELATED API CALLS
 
-app.get('/getSingleMechanic',
+
+app.get('/initiateJob',
     function(req, res) {
         if (req.query) {
             var customerId = req.query.customerId;
@@ -286,9 +288,14 @@ app.get('/getSingleMechanic',
             var latitude = req.query.latitude;
             var fcmToken = req.query.fcmToken;
 
-            getAvaliableMechanic(customerId, latitude, longitude);
+            addCustomer(customerId, longitude, latitude, fcmToken).then(() => {
+                setupJob(customerId, latitude, longitude).then(() => {
+                    res.send({message: "success"});
+                }).catch(error => res.send({message: error}));
+            }).catch(error => res.send({message: error}));
+        } else {
+            res.send({message: "error"});
         }
-        res.send({});
     }
 );
 
@@ -300,7 +307,24 @@ app.get('/mechStatusChange',
             var latitude = req.query.latitude;
             var fcmToken = req.query.fcmToken;
 
-            addMechanic(mechanicId, longitude, latitude, fcmToken);
+            addMechanic(mechanicId, longitude, latitude, fcmToken).then(() => {
+                res.send({message: "success"});
+            }).catch((error) => {
+                res.send({message: error});
+            });
+        } else {
+            res.send({message: "error"});
+        }
+    }
+);
+
+app.get('/mechAcceptJob',
+    function(req, res) {
+        if (req.query) {
+            var customerId = req.query.customerId;
+            var mechanicId = req.query.mechanicId;
+
+            mechanicAccept(mechanicId, customerId);
         }
         res.send({});
     }
@@ -314,9 +338,14 @@ app.get('/custStatusChange',
             var latitude = req.query.latitude;
             var fcmToken = req.query.fcmToken;
 
-            addCustomer(customerId, longitude, latitude, fcmToken);
+            addCustomer(customerId, longitude, latitude, fcmToken).then(() => {
+                res.send({message: "success"});
+            }).catch((error) => {
+                res.send({message: error});
+            });
+        } else {
+            res.send({message: "error"});
         }
-        res.send({});
     }
 );
 

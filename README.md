@@ -110,3 +110,157 @@ For the mechanic:
 6. On click Reject, emit ```mechanic_reject_job(mechanic, customer)```
 
 See ```socket-io-logic.js``` for the technical details
+
+### HTTP + FCM for Handling Jobs
+ 
+This suite of APIs is a fallback from socket.io to handle communication between the mechanic and customers.
+
+#### HTTP APIs
+
+1. Route: `/mechStateChange`
+
+   Method: GET
+   
+   Sugggest
+
+   Params: 
+   1. mechanicId - id of the mechanic
+   2. longitude - current longitude of the mechanic
+   3. latitude - current latitude of the mechanic
+   4. fcmToken - Firebase token generated on the mechanic's device
+   
+   Response:
+   1. On success: `{ message: "success" }`
+   2. On error, `{ message: { error: someErrorObject } }` where `someErrorObject` contains the specific error
+   
+1. Route: `/custStateChange`
+
+   Method: GET 
+
+   Params: 
+   1. customerId - id of the customer
+   2. longitude - current longitude of the customer
+   3. latitude - current latitude of the customer
+   4. fcmToken - Firebase token generated on the customer's device 
+
+   Response:
+   1. On success: `{ message: "success" }`
+   2. On error, `{ message: { error: someErrorObject } }` where `someErrorObject` contains the specific error
+      
+1. Route: `/initiateJob`
+
+   Method: GET 
+
+   Params: 
+   1. customerId - id of the customer
+   2. longitude - current longitude of the customer
+   3. latitude - current latitude of the customer
+   4. fcmToken - Firebase token generated on the customer's device 
+
+   Response:
+   1. On success: `{ message: "success" }`
+   2. On error, `{ message: { error: someErrorObject } }` where `someErrorObject` contains the specific error
+   
+1. Route: `/mechAcceptJob`
+
+   Method: GET 
+
+   Params: 
+   1. customerId - id of the customer
+   1. mechanicId - id of the mechanic
+
+   Response:
+   1. On success: `{ message: "success" }`
+   2. On error, `{ message: { error: someErrorObject } }` where `someErrorObject` contains the specific error
+   
+1. Route: `/cancelJob`
+
+   Method: GET 
+
+   Params: 
+   1. customerId - id of the customer
+   1. mechanicId - id of the mechanic
+   1. canceller - `"mechanic"` or `"customer"`, depending on who is calling the API
+
+   Response:
+   1. On success: `{ message: "success" }`
+   2. On error, `{ message: { error: someErrorObject } }` where `someErrorObject` contains the specific error
+
+1. Route: `/endJob`
+
+   Method: GET 
+
+   Params: 
+   1. customerId - id of the customer
+   1. mechanicId - id of the mechanic
+
+   Response:
+   1. On success: `{ message: "success" }`
+   2. On error, `{ message: { error: someErrorObject } }` where `someErrorObject` contains the specific error
+   
+### FCM Events
+
+1. Event: `mechanic_data_updated`
+
+   Payload: `{}`
+   
+   Sent to: Mechanic
+   
+1. Event: `customer_data_updated`
+
+   Payload: `{}` 
+   
+   Sent to: Customer
+   
+1. Event: `customer_request`
+
+   Payload: `{ customer: { id, firstname, phone_number, email, lastname }}`
+   
+   Sent to: Mechanic
+   
+1. Event: `mechanic_accept`
+
+   Payload: `{ mechanic: { id, firstname, phone_number, email, lastname:, company }}`
+   
+   Sent to: Customer
+   
+1. Event: `mechanic_cancel_job`
+
+   Payload: `{ customerId }`
+   
+   Sent to: Customer
+   
+1. Event: `customer_cancel_job`
+
+   Payload: `{ mechanicId }`
+   
+   Sent to: Mechanic
+   
+1. Event: `mechanic_end_job`
+
+   Payload: `{ customerId }`
+   
+   Sent to: Customer
+   
+### Suggested Usage
+
+1. Mechanic updates their location every 60 seconds using `mechStateUpdate`. 
+
+    Every time this happens, `mechanic_data_updated` is emitted to the mechanic with the fcmToken sent in the API call.
+    
+1. Customer requests job by making `/initiateJob` call. This will do two things:
+
+    1. Update the customer's location on the back end. The customer receives `customer_data_updated` after this happens
+    1. Send `customer_request` to each of the closest `N` mechanics
+    
+1. Mechanic accepts job request by making `/mechAcceptJob` call. This sends `mechanic_accept` event to the customer. 
+
+    To reject a request, the mechanic does not need to make any call to the back end. 
+    
+    If a mechanic accepts a job but it was accepted by another mechanic beforeheand, the http response will be an error with a message specifying that.
+
+1. Either the customer or the mechanic can cancel an active job using `/cancelJob`, but the `canceller` field must be populated with the right value. 
+
+    `mechanic_cancel_job` will be sent to the customer if the mechanic is the canceller and `customer_cancel_job` otherwise.
+
+1. Mechanic ends the job by calling `/endJob`. `mechanic_end_job` will be emitted to the customer. 

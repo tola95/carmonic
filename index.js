@@ -15,7 +15,7 @@ const logger = require('./logging-module/winston-logic.js');
 const request = require('request');
 const googleConfig = require('./googleConfig');
 const paystackConfig = require('./paystackConfig');
-const { addCustomer, addMechanic, mechanicAccept, setupJob } = require('./networks/JobCoordinator');
+const { addCustomer, addMechanic, cancelJob, endJob, mechanicAccept, setupJob } = require('./networks/JobCoordinator');
 
 const credentials = {
     key: fs.readFileSync('carmonic.key'),
@@ -324,9 +324,13 @@ app.get('/mechAcceptJob',
             var customerId = req.query.customerId;
             var mechanicId = req.query.mechanicId;
 
-            mechanicAccept(mechanicId, customerId);
+            mechanicAccept(mechanicId, customerId).then(() => {
+                res.send({message: "success"});
+            }).catch((error) => {
+                res.send({message: error});
+            });
         }
-        res.send({});
+        res.send({message: "error"});
     }
 );
 
@@ -339,6 +343,41 @@ app.get('/custStatusChange',
             var fcmToken = req.query.fcmToken;
 
             addCustomer(customerId, longitude, latitude, fcmToken).then(() => {
+                res.send({message: "success"});
+            }).catch((error) => {
+                res.send({message: error});
+            });
+        } else {
+            res.send({message: "error"});
+        }
+    }
+);
+
+app.get('/cancelJob',
+    function(req, res) {
+        if (req.query) {
+            var customerId = req.query.customerId;
+            var mechanicId = req.query.mechanicId;
+            var canceller = req.query.canceller;
+
+            cancelJob(customerId, mechanicId, canceller).then(() => {
+                res.send({message: "success"});
+            }).catch((error) => {
+                res.send({message: error});
+            });
+        } else {
+            res.send({message: "error"});
+        }
+    }
+);
+
+app.get('/endJob',
+    function(req, res) {
+        if (req.query) {
+            var customerId = req.query.customerId;
+            var mechanicId = req.query.mechanicId;
+
+            endJob(customerId, mechanicId).then(() => {
                 res.send({message: "success"});
             }).catch((error) => {
                 res.send({message: error});

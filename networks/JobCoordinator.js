@@ -137,15 +137,20 @@ const sendMessage = (event, payload, token) => {
 };
 
 const mechanicAcceptJob = (mechanicId, customerId) => {
-    activeJobs[customerId] = {customerId, mechanicId};
-    activeCustomers[customerId].activeJob = activeJobs[customerId];
-    activeMechanics[mechanicId].activeJob = activeJobs[customerId];
+    if (activeCustomers[customerId].activeJob === undefined && activeMechanics[mechanicId].activeJob === undefined) {
+        activeJobs[customerId] = {customerId, mechanicId};
+        activeCustomers[customerId].activeJob = activeJobs[customerId];
+        activeMechanics[mechanicId].activeJob = activeJobs[customerId];
 
-    return getMechanicDetails(mechanicId).then((mechanic) => {
-        sendMessage('mechanic_accept', { mechanic }, activeCustomers[customerId].fcmToken);
-    }).catch((error) => {
+        return getMechanicDetails(mechanicId).then((mechanic) => {
+            return Promise.resolve(sendMessage('mechanic_accept', { mechanic }, activeCustomers[customerId].fcmToken));
+        }).catch((error) => {
+            return Promise.reject(error);
+        });
+    } else {
+        //ToDo: Send specific error saying that job has been taken
         return Promise.reject(error);
-    });
+    }
 };
 
 const setupJob = (customerId, lat, lng) => {
@@ -175,19 +180,22 @@ const setupJob = (customerId, lat, lng) => {
 
 const cancelJob = (customerId, mechanicId, canceller) => {
     try {
-        const customer = activeCustomers[customerId];
-        const mechanic = activeMechanics[mechanicId];
+        if (!!activeJobs[customerId]) {
+            delete activeJobs[customerId];
+            const customer = activeCustomers[customerId];
+            const mechanic = activeMechanics[mechanicId];
 
-        delete activeJobs[customerId];
-        activeCustomers[customerId].activeJob = undefined;
-        activeMechanics[mechanicId].activeJob = undefined;
+            activeCustomers[customerId].activeJob = undefined;
+            activeMechanics[mechanicId].activeJob = undefined;
 
-        if (canceller === "mechanic") {
-            return Promise.resolve(sendMessage('mechanic_cancel_job', { customerId }, customer.fcmToken));
+            if (canceller === "mechanic") {
+                return Promise.resolve(sendMessage('mechanic_cancel_job', { customerId }, customer.fcmToken));
+            } else {
+                return Promise.resolve(sendMessage('customer_cancel_job', { mechanicId }, mechanic.fcmToken));
+            }
         } else {
-            return Promise.resolve(sendMessage('customer_cancel_job', { mechanicId }, mechanic.fcmToken));
+            Promise.reject({error: "no active job for mechanic " + mechanicId + " and customer " + customerId});
         }
-
     } catch (error) {
         return Promise.reject(error);
     }
@@ -196,7 +204,6 @@ const cancelJob = (customerId, mechanicId, canceller) => {
 const endJob = (customerId, mechanicId) => {
     try {
         const customer = activeCustomers[customerId];
-        const mechanic = activeMechanics[mechanicId];
 
         delete activeJobs[customerId];
         activeCustomers[customerId].activeJob = undefined;
@@ -236,3 +243,5 @@ exports.addMechanic = addMechanic;
 exports.addCustomer = addCustomer;
 exports.setupJob = setupJob;
 exports.mechanicAccept = mechanicAcceptJob;
+exports.cancelJob = cancelJob;
+exports.endJob = endJob;
